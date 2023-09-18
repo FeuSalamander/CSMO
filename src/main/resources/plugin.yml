@@ -1,6 +1,11 @@
-name: CS:MO
+name: CSMO
 version: '${project.version}'
 main: feusalamander.cs_mo.CS_MO
-api-version: '1.20'
+api-version: '1.13'
 authors: [FeuSalamander]
 description: CS:MO is a the plugin that brings the CS:GO game to minecraft !
+prefix: CS:MO
+commands:
+  cs:
+    description: The main command of CS:MO
+    aliases: cs
