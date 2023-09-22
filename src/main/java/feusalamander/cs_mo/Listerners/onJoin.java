@@ -13,7 +13,7 @@ import static feusalamander.cs_mo.CS_MO.main;
 @SuppressWarnings("deprecation")
 public class onJoin implements Listener {
     @EventHandler
-    private void onJoin(PlayerJoinEvent e){
+    private void onJoinn(PlayerJoinEvent e){
         e.getPlayer().setGameMode(GameMode.ADVENTURE);
         main.getNone().add(e.getPlayer());
         if(!main.getPlayerData().hasJoined(e.getPlayer().getUniqueId()))main.getPlayerData().createUuid(e.getPlayer().getUniqueId());

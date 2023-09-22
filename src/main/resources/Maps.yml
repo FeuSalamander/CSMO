@@ -1,0 +1,11 @@
+dust2:
+  name: Dust2
+  enabled: true
+  maps:
+    1:
+      spawns:
+        AT: "0:60:0:0:0"
+        T: "0:60:0:0:0"
+      sites:
+        A: "0:60:0"
+        B: "0:60:0"

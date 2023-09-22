@@ -7,9 +7,12 @@ import feusalamander.cs_mo.Gui.PlayGui;
 import feusalamander.cs_mo.Listerners.GuiClicks;
 import feusalamander.cs_mo.Listerners.onJoin;
 import feusalamander.cs_mo.Runnables.ActionBarTick;
-import feusalamander.cs_mo.managers.Config;
-import feusalamander.cs_mo.managers.PlayerData;
+import feusalamander.cs_mo.Configs.Config;
+import feusalamander.cs_mo.Managers.Map;
+import feusalamander.cs_mo.Configs.MapConfig;
+import feusalamander.cs_mo.Managers.PlayerData;
 import it.unimi.dsi.fastutil.Pair;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,6 +28,8 @@ public final class CS_MO extends JavaPlugin {
     private Config config;
     private PlayerData playerData;
     private ActionBarTick actionBarTick;
+    private List<Map> maps;
+    private MapConfig mapConf;
     private final List<Pair<Integer, List<Player>>> queue = new ArrayList<>();
     private final List<Player> none = new ArrayList<>();
 
@@ -52,6 +57,17 @@ public final class CS_MO extends JavaPlugin {
         this.playerData = new PlayerData();
         this.actionBarTick = new ActionBarTick();
         actionBarTick.runTaskTimerAsynchronously(this, 0, 40);
+        mapConf = new MapConfig();
+        loadMaps();
+    }
+    private void loadMaps(){
+        for(String mapKey : mapConf.getMaps()){
+            final ConfigurationSection section = mapConf.getConfig().getConfigurationSection(mapKey);
+            assert section != null;
+            String id = section.getName();
+            final Map floor = new Map(id);
+            this.maps.add(floor);
+        }
     }
     public GuiTool getGuitool(){
         return guitool;
@@ -73,6 +89,12 @@ public final class CS_MO extends JavaPlugin {
     }
     public List<Player> getNone() {
         return none;
+    }
+    public List<Map> getMaps(){
+        return maps;
+    }
+    public MapConfig getMapConf(){
+        return mapConf;
     }
     public void removeQueue(Player p){
         for(Pair<Integer, List<Player>> pair : queue){

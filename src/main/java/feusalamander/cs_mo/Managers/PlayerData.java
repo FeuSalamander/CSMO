@@ -1,4 +1,4 @@
-package feusalamander.cs_mo.managers;
+package feusalamander.cs_mo.Managers;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -31,14 +31,38 @@ public class PlayerData {
         config.set(uuid+".elo", 0);
         config.set(uuid+".kills", 0);
         config.set(uuid+".deaths", 0);
+        config.set(uuid+".wins", 0);
+        config.set(uuid+".looses", 0);
     }
     public int getElo(UUID uuid){
-        if(!config.contains(String.valueOf(uuid)))return 0;
         return config.getInt(uuid+".elo");
     }
     public void addElo(UUID uuid, int value){
-        if(!config.contains(String.valueOf(uuid)))return;
         config.set(uuid+".elo", getElo(uuid)+value);
+    }
+    public int getKills(UUID uuid){
+        return config.getInt(uuid+".kills");
+    }
+    public void addKills(UUID uuid, int value){
+        config.set(uuid+".kills", getKills(uuid)+value);
+    }
+    public int getDeaths(UUID uuid){
+        return config.getInt(uuid+".deaths");
+    }
+    public void addDeaths(UUID uuid, int value){
+        config.set(uuid+".deaths", getDeaths(uuid)+value);
+    }
+    public int getWins(UUID uuid){
+        return config.getInt(uuid+".wins");
+    }
+    public void addWins(UUID uuid, int value){
+        config.set(uuid+".wins", getWins(uuid)+value);
+    }
+    public int getLooses(UUID uuid){
+        return config.getInt(uuid+".looses");
+    }
+    public void addLooses(UUID uuid, int value){
+        config.set(uuid+".looses", getLooses(uuid)+value);
     }
     public boolean hasJoined(UUID uuid){
         return config.contains(String.valueOf(uuid));

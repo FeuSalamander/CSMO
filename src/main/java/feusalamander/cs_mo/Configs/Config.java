@@ -1,4 +1,4 @@
-package feusalamander.cs_mo.managers;
+package feusalamander.cs_mo.Configs;
 
 import org.bukkit.configuration.file.FileConfiguration;
 
