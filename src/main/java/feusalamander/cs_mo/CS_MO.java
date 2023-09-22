@@ -11,6 +11,7 @@ import feusalamander.cs_mo.Configs.Config;
 import feusalamander.cs_mo.Managers.Map;
 import feusalamander.cs_mo.Configs.MapConfig;
 import feusalamander.cs_mo.Managers.PlayerData;
+import feusalamander.cs_mo.Runnables.Starting;
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -28,10 +29,11 @@ public final class CS_MO extends JavaPlugin {
     private Config config;
     private PlayerData playerData;
     private ActionBarTick actionBarTick;
-    private List<Map> maps;
+    private final List<Map> maps = new ArrayList<>();
     private MapConfig mapConf;
     private final List<Pair<Integer, List<Player>>> queue = new ArrayList<>();
     private final List<Player> none = new ArrayList<>();
+    private final List<Starting> starting = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -44,7 +46,6 @@ public final class CS_MO extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GuiClicks(), this);
         getServer().getPluginManager().registerEvents(new onJoin(), this);
     }
-
     @Override
     public void onDisable() {
         playerData.save();
@@ -106,5 +107,9 @@ public final class CS_MO extends JavaPlugin {
                 return;
             }
         }
+        for(Starting timers : starting){timers.getPlayers().remove(p);}
+    }
+    public List<Starting> getStarting() {
+        return starting;
     }
 }

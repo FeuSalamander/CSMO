@@ -4,8 +4,36 @@ dust2:
   maps:
     1:
       spawns:
-        AT: "0:60:0:0:0"
-        T: "0:60:0:0:0"
+        AT:
+          ==: org.bukkit.Location
+          world: world
+          x: -2
+          y: 82
+          z: -23
+          pitch: 90.0
+          yaw: 0.0
+        T:
+          ==: org.bukkit.Location
+          world: world
+          x: -73
+          y: 90
+          z: -62
+          pitch: 90.0
+          yaw: 0.0
       sites:
-        A: "0:60:0"
-        B: "0:60:0"
+        A:
+          ==: org.bukkit.Location
+          world: world
+          x: -3
+          y: 88
+          z: -1
+          pitch: 0.0
+          yaw: 0.0
+        B:
+          ==: org.bukkit.Location
+          world: world
+          x: 15
+          y: 86
+          z: -66
+          pitch: 0.0
+          yaw: 0.0
