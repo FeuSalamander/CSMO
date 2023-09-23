@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,10 +28,10 @@ public class Map {
         assert section2 != null;
         for(String key : section2.getKeys(false)){
             Location[][] map = new Location[2][2];
-            map[0][0] = section2.getLocation(key+"spawns.AT");
-            map[0][1] = section2.getLocation(key+"spawns.T");
-            map[1][0] = section2.getLocation(key+"sites.A");
-            map[1][1] = section2.getLocation(key+"sites.B");
+            map[0][0] = section2.getLocation(key+".spawns.AT");
+            map[0][1] = section2.getLocation(key+".spawns.T");
+            map[1][0] = section2.getLocation(key+".sites.A");
+            map[1][1] = section2.getLocation(key+".sites.B");
             schematics.add(Pair.of(true, map));
         }
     }
@@ -45,5 +46,10 @@ public class Map {
     }
     public List<Pair<Boolean,Location[][]>> getSchematics() {
         return schematics;
+    }
+    public void setPair(boolean state, int number){
+        Location[][] map = schematics.get(number).right();
+        schematics.remove(number);
+        schematics.add(Pair.of(state, map));
     }
 }

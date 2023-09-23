@@ -1,7 +1,6 @@
 package feusalamander.cs_mo.Runnables;
 
-import it.unimi.dsi.fastutil.Pair;
-import net.kyori.adventure.title.Title;
+import feusalamander.cs_mo.Managers.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -19,10 +18,10 @@ public class Starting extends BukkitRunnable {
     }
     @Override
     public void run() {
-        if(players.size() != 10)unload();
-        if(timer == 0){unload();start();}
+        if(players.size() != main.getConf().getMinPlayer())unload();
+        if(timer == 0){unload();start();return;}
         for(Player p  : players){
-            p.sendTitle(colors[timer]+timer+"s", "");
+            p.sendTitle(colors[timer-1]+"§l"+timer+"s", "");
             p.setLevel(timer*2);
         }
         timer--;
@@ -36,14 +35,10 @@ public class Starting extends BukkitRunnable {
     }
     private void start(){
         main.getStarting().remove(this);
-        for(Pair<Integer, List<Player>> pair : main.getQueue()){
-            if(pair.right().contains(players.get(1))){
-                main.getQueue().remove(pair);
-            }
-        }
+        main.getQueue().removeIf(pair -> pair.right().contains(players.get(1)));
         for(Player p : players){
             main.getNone().remove(p);
         }
-
+        new Game(players);
     }
 }

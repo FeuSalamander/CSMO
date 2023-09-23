@@ -6,6 +6,7 @@ import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Gui.PlayGui;
 import feusalamander.cs_mo.Listerners.GuiClicks;
 import feusalamander.cs_mo.Listerners.onJoin;
+import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Runnables.ActionBarTick;
 import feusalamander.cs_mo.Configs.Config;
 import feusalamander.cs_mo.Managers.Map;
@@ -13,6 +14,7 @@ import feusalamander.cs_mo.Configs.MapConfig;
 import feusalamander.cs_mo.Managers.PlayerData;
 import feusalamander.cs_mo.Runnables.Starting;
 import it.unimi.dsi.fastutil.Pair;
+import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -34,6 +36,7 @@ public final class CS_MO extends JavaPlugin {
     private final List<Pair<Integer, List<Player>>> queue = new ArrayList<>();
     private final List<Player> none = new ArrayList<>();
     private final List<Starting> starting = new ArrayList<>();
+    private final List<Game> games = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -49,6 +52,7 @@ public final class CS_MO extends JavaPlugin {
     @Override
     public void onDisable() {
         playerData.save();
+        for(Game game : games)game.getBar().removeAll();
         getLogger().info("CS:MO by FeuSalamander is unloaded");
     }
     private void loadClasses(){
@@ -111,5 +115,8 @@ public final class CS_MO extends JavaPlugin {
     }
     public List<Starting> getStarting() {
         return starting;
+    }
+    public List<Game> getGames() {
+        return games;
     }
 }
