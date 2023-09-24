@@ -15,10 +15,12 @@ import feusalamander.cs_mo.Managers.PlayerData;
 import feusalamander.cs_mo.Runnables.Starting;
 import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.bossbar.BossBar;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ public final class CS_MO extends JavaPlugin {
     private ActionBarTick actionBarTick;
     private final List<Map> maps = new ArrayList<>();
     private MapConfig mapConf;
+    private Scoreboard scoreboard;
     private final List<Pair<Integer, List<Player>>> queue = new ArrayList<>();
     private final List<Player> none = new ArrayList<>();
     private final List<Starting> starting = new ArrayList<>();
@@ -48,12 +51,15 @@ public final class CS_MO extends JavaPlugin {
         Objects.requireNonNull(getCommand("cs")).setTabCompleter(new Completer());
         getServer().getPluginManager().registerEvents(new GuiClicks(), this);
         getServer().getPluginManager().registerEvents(new onJoin(), this);
+        scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
     }
     @Override
     public void onDisable() {
         playerData.save();
-        for(Game game : games)game.getBar().removeAll();
         getLogger().info("CS:MO by FeuSalamander is unloaded");
+        for(Game game : games){
+            game.getBar().removeAll();
+        }
     }
     private void loadClasses(){
         this.config = new Config(this.getConfig());
@@ -118,5 +124,8 @@ public final class CS_MO extends JavaPlugin {
     }
     public List<Game> getGames() {
         return games;
+    }
+    public Scoreboard getScoreboard(){
+        return scoreboard;
     }
 }

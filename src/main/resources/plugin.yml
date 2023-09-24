@@ -9,3 +9,4 @@ commands:
   cs:
     description: The main command of CS:MO
     aliases: cs
+load: POSTWORLD

@@ -21,7 +21,7 @@ public class Starting extends BukkitRunnable {
         if(players.size() != main.getConf().getMinPlayer())unload();
         if(timer == 0){unload();start();return;}
         for(Player p  : players){
-            p.sendTitle(colors[timer-1]+"§l"+timer+"s", "");
+            p.sendTitle(colors[timer-1]+"§l"+timer*2+"s", "");
             p.setLevel(timer*2);
         }
         timer--;

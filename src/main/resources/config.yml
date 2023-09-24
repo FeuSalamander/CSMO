@@ -2,3 +2,4 @@ mysql:
   enabled: false
 matchmaking: 10 #if players have + or - this elo they wil be able to match together
 minPlayers: 2
+serverip: salamanderia.ddns.net

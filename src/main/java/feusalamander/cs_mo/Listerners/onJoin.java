@@ -1,5 +1,6 @@
 package feusalamander.cs_mo.Listerners;
 
+import feusalamander.cs_mo.Managers.Game;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,6 +25,7 @@ public class onJoin implements Listener {
         main.getPlayerData().save();
         main.getNone().remove(p);
         main.removeQueue(p);
+        for(Game game : main.getGames())if(game.getPlayers().contains(p))game.remove(p);
     }
     @EventHandler
     private void onHit(EntityDamageByEntityEvent e){
