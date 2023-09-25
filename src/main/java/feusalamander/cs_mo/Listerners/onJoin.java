@@ -22,6 +22,7 @@ public class onJoin implements Listener {
     @EventHandler
     private void onLeave(PlayerQuitEvent e){
         Player p = e.getPlayer();
+        p.getInventory().clear();
         main.getPlayerData().save();
         main.getNone().remove(p);
         main.removeQueue(p);

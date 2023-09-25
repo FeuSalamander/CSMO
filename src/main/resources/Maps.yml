@@ -8,7 +8,7 @@ dust2:
           ==: org.bukkit.Location
           world: world
           x: -3
-          y: 84
+          y: 83
           z: -23
           pitch: 90.0
           yaw: 0.0
@@ -16,7 +16,7 @@ dust2:
           ==: org.bukkit.Location
           world: world
           x: -73
-          y: 92
+          y: 91
           z: -62
           pitch: 90.0
           yaw: 0.0

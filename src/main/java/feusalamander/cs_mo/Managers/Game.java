@@ -1,15 +1,17 @@
 package feusalamander.cs_mo.Managers;
 
+import feusalamander.cs_mo.Runnables.GameTick;
 import it.unimi.dsi.fastutil.Pair;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scoreboard.*;
 
 import java.util.*;
@@ -28,8 +30,9 @@ public class Game implements Listener {
     private final HashMap<Player, Integer> money = new HashMap<>();
     private BossBar bar;
     private final int[] score = new int[2];
-    private final int round = 0;
+    private int round = 1;
     private Scoreboard sb;
+    private GameTick tick;
     public Game(List<Player> players){
         this.players = players;
         main.getGames().add(this);
@@ -41,6 +44,8 @@ public class Game implements Listener {
         chooseSpawns();
         scoreboard();
         bossBar();
+
+        start();
     }
     private Location[][] choosePlace(){
         int crash = 0;
@@ -152,12 +157,12 @@ public class Game implements Listener {
         bar.setProgress(0);
         for(Player p : players)bar.addPlayer(p);
     }
-    private void updateBar(){
+    public void updateBar(){
         bar.setProgress((double) round /20);
-        bar.setTitle("§9"+score[0]+" §f1:55 §6"+score[1]);
     }
     private void start(){
-
+        tick = new GameTick(this);
+        tick.runTaskTimer(main, 0, 20);
     }
     private void unload(){
         HandlerList.unregisterAll(this);
@@ -167,10 +172,29 @@ public class Game implements Listener {
         p.setScoreboard(main.getScoreboard());
         bar.removePlayer(p);
     }
+    public void changeSide(){
+
+    }
     public List<Player> getPlayers() {
         return players;
     }
     public BossBar getBar() {
         return bar;
+    }
+    public int[] getScore() {
+        return score;
+    }
+    public void addRound(){
+        round++;
+    }
+    public int getRound() {
+        return round;
+    }
+
+    @EventHandler
+    private void onMove(PlayerMoveEvent e){
+        if(!players.contains(e.getPlayer()))return;
+        if(!e.hasExplicitlyChangedPosition())return;
+        if(tick.isRest())e.setCancelled(true);
     }
 }

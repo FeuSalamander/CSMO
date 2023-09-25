@@ -20,35 +20,32 @@ public class GuiTool {
         item.setItemMeta(meta);
         pane = item;
     }
-    public void addItem(Inventory menu,
+    public ItemStack getItem(
                            Material material,
                            String name,
-                           List<String> lore,
-                        int slot){
+                           List<String> lore){
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         meta.setLore(lore);
         item.setItemMeta(meta);
-        menu.setItem(slot, item);
+        return item;
     }
-    public void addItem(Inventory menu,
-                        Material material,
-                        String name,
-                        int slot){
+    public ItemStack getItem(Material material,
+                        String name){
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         item.setItemMeta(meta);
-        menu.setItem(slot, item);
+        return item;
     }
-    public void addSkull(Inventory inv, int slot, String name, String skin){
+    public ItemStack getSkull(String name, String skin){
         ItemStack item = new ItemStack(Material.PLAYER_HEAD);
         Bukkit.getUnsafe().modifyItemStack(item, "{SkullOwner:{Id:\"" + new UUID(skin.hashCode(), skin.hashCode()) + "\",Properties:{textures:[{Value:\"" + skin + "\"}]}}}");
         SkullMeta meta = (SkullMeta) item.getItemMeta();
         meta.setDisplayName(name);
         item.setItemMeta(meta);
-        inv.setItem(slot, item);
+        return item;
     }
     public ItemStack pane(){
         return pane;

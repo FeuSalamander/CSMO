@@ -38,6 +38,7 @@ public class Starting extends BukkitRunnable {
         main.getQueue().removeIf(pair -> pair.right().contains(players.get(1)));
         for(Player p : players){
             main.getNone().remove(p);
+            p.getInventory().clear();
         }
         new Game(players);
     }

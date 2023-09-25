@@ -19,6 +19,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 
@@ -52,6 +53,7 @@ public final class CS_MO extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GuiClicks(), this);
         getServer().getPluginManager().registerEvents(new onJoin(), this);
         scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        none.addAll(getServer().getOnlinePlayers());
     }
     @Override
     public void onDisable() {
@@ -108,16 +110,19 @@ public final class CS_MO extends JavaPlugin {
         return mapConf;
     }
     public void removeQueue(Player p){
+        for(Starting timers : starting){timers.getPlayers().remove(p);}
         for(Pair<Integer, List<Player>> pair : queue){
             if(pair.right().contains(p)){
-                pair.right().remove(p);
-                if(pair.right().isEmpty()){
-                    queue.remove(pair);
+                List<Player> playerList = new ArrayList<>(pair.right());
+                playerList.remove(p);
+                int elo = pair.left();
+                queue.remove(pair);
+                if(!playerList.isEmpty()){
+                    queue.add(Pair.of(elo, playerList));
                 }
                 return;
             }
         }
-        for(Starting timers : starting){timers.getPlayers().remove(p);}
     }
     public List<Starting> getStarting() {
         return starting;
