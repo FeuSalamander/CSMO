@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -33,5 +34,9 @@ public class onJoin implements Listener {
         if(e.getDamager() instanceof Player p&&e.getEntity() instanceof Player p2){
             if(main.getNone().contains(p)||main.getNone().contains(p2))e.setCancelled(true);
         }
+    }
+    @EventHandler
+    private void onFood(FoodLevelChangeEvent e){
+        if(e.getFoodLevel() < 20)e.setFoodLevel(20);
     }
 }

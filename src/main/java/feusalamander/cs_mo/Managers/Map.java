@@ -16,7 +16,7 @@ public class Map {
     private final String id;
     private final String name;
     private final boolean enabled;
-    private final List<Pair<Boolean,Location[][]>> schematics = new ArrayList<>();
+    private final List<Pair<Boolean,Location[]>> schematics = new ArrayList<>();
 
     public Map(final String id){
         this.id = id;
@@ -27,11 +27,9 @@ public class Map {
         final ConfigurationSection section2 = section.getConfigurationSection("maps");
         assert section2 != null;
         for(String key : section2.getKeys(false)){
-            Location[][] map = new Location[2][2];
-            map[0][0] = section2.getLocation(key+".spawns.AT");
-            map[0][1] = section2.getLocation(key+".spawns.T");
-            map[1][0] = section2.getLocation(key+".sites.A");
-            map[1][1] = section2.getLocation(key+".sites.B");
+            Location[] map = new Location[2];
+            map[0] = section2.getLocation(key+".spawns.AT");
+            map[1] = section2.getLocation(key+".spawns.T");
             schematics.add(Pair.of(true, map));
         }
     }
@@ -44,11 +42,11 @@ public class Map {
     public boolean isEnabled() {
         return enabled;
     }
-    public List<Pair<Boolean,Location[][]>> getSchematics() {
+    public List<Pair<Boolean,Location[]>> getSchematics() {
         return schematics;
     }
     public void setPair(boolean state, int number){
-        Location[][] map = schematics.get(number).right();
+        Location[] map = schematics.get(number).right();
         schematics.remove(number);
         schematics.add(Pair.of(state, map));
     }

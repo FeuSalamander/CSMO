@@ -10,7 +10,7 @@ dust2:
           x: -3
           y: 83
           z: -23
-          pitch: 90.0
+          pitch: 0.0
           yaw: 0.0
         T:
           ==: org.bukkit.Location
@@ -18,22 +18,5 @@ dust2:
           x: -73
           y: 91
           z: -62
-          pitch: 90.0
-          yaw: 0.0
-      sites:
-        A:
-          ==: org.bukkit.Location
-          world: world
-          x: -3
-          y: 88
-          z: -1
-          pitch: 0.0
-          yaw: 0.0
-        B:
-          ==: org.bukkit.Location
-          world: world
-          x: 15
-          y: 86
-          z: -66
           pitch: 0.0
           yaw: 0.0

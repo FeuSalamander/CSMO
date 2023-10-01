@@ -5,8 +5,9 @@ api-version: '1.13'
 authors: [FeuSalamander]
 description: CS:MO is a the plugin that brings the CS:GO game to minecraft !
 prefix: CS:MO
+#depend: WeaponMechanics
+load: POSTWORLD
 commands:
   cs:
     description: The main command of CS:MO
     aliases: cs
-load: POSTWORLD
