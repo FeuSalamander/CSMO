@@ -6,8 +6,12 @@ import feusalamander.cs_mo.Gui.TBuyMenu;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Runnables.Starting;
 import it.unimi.dsi.fastutil.Pair;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +24,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static feusalamander.cs_mo.CS_MO.main;
 
@@ -115,9 +118,10 @@ public class GuiClicks implements Listener {
                 if(game.getT().contains(p)){p.openInventory(TBuyMenu.menu);return;}
             }
         }
-        if(name.equalsIgnoreCase("§4Bomb")){
-            for(Game game : main.getGames()){
-                if(game.getPlayers().contains(p)){
+        if(name.equalsIgnoreCase("§4Bomb")) {
+            if (!p.getLocation().getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.BEDROCK)) return;
+            for (Game game : main.getGames()) {
+                if (game.getPlayers().contains(p)) {
                     game.plant(p);
                     return;
                 }

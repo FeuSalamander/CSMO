@@ -5,6 +5,7 @@ import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Runnables.GameTick;
 import feusalamander.cs_mo.Runnables.Planting;
 import it.unimi.dsi.fastutil.Pair;
+import me.deecaad.weaponmechanics.weapon.weaponevents.WeaponMeleeHitEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,15 +14,14 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scoreboard.*;
@@ -210,8 +210,10 @@ public class Game implements Listener {
     }
     public void plant(Player p){
         if(!T.contains(p))return;
-        if(!p.getLocation().getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.BEDROCK))return;
         new Planting(p, this).runTaskTimer(main, 0, 4);
+    }
+    public void defuse(Player p){
+        Bukkit.broadcastMessage("called");
     }
     public List<Player> getPlayers() {
         return players;
@@ -260,19 +262,23 @@ public class Game implements Listener {
         this.money.replace(p, money);
         Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.money.get(p)).setScore(2);
     }
-
     @EventHandler
     private void onMove(PlayerMoveEvent e){
         if(!players.contains(e.getPlayer()))return;
         if(!e.hasExplicitlyChangedPosition())return;
         if(tick.isRest()){e.setCancelled(true);return;}
         if(!getT().contains(e.getPlayer()))return;
-        if(e.getPlayer().getItemInHand().getType().equals(Material.NETHER_STAR))e.setCancelled(true);
+        if(!e.getPlayer().getItemInHand().getType().equals(Material.NETHER_STAR))return;
+        if(e.getPlayer().getLocation().getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.BEDROCK))e.setCancelled(true);
     }
     @EventHandler
     private void onHit(EntityDamageByEntityEvent e){
-        if(!tick.isRest())return;
+        if(e.getEntity() instanceof ArmorStand s&& Objects.requireNonNull(s.getCustomName()).equalsIgnoreCase("§4Bomb")&&e.getDamager() instanceof Player p&&AT.contains(p)){
+            e.setDamage(0);
+            defuse(p);
+        }
         if(e.getDamager() instanceof Player p&&e.getEntity() instanceof Player p2){
+            if(!tick.isRest())return;
             if(players.contains(p)||players.contains(p2)){
                 e.setCancelled(true);
             }
