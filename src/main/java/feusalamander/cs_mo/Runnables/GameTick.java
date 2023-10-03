@@ -59,9 +59,11 @@ public class GameTick extends BukkitRunnable {
     private void score(){
         if(!game.getBombPlanted().first()){
             game.addScore(0);
+            for(Player p : game.getPlayers())p.sendMessage("§9The CTs wins");
         }else {
             game.addScore(1);
-            removeBomb();
+            game.removeBomb();
+            for(Player p : game.getPlayers())p.sendMessage("§6The Ts wins");
         }
     }
     public void bomb(){
@@ -72,9 +74,8 @@ public class GameTick extends BukkitRunnable {
         time = 40;
         color = "§4";
     }
-    private void removeBomb(){
-        if(game.getBombPlanted().left())for(Entity entity : game.getBombPlanted().right().getNearbyEntities(0.5, 0.5, 0.5))if(entity instanceof ArmorStand)entity.remove();
-        Objects.requireNonNull(game.getSb().getTeam("bombV")).setSuffix("Not Planted");
-        game.setBombPlanted(false, null);
+    public void defuse(){
+        time = 1;
+        color = "§f";
     }
 }

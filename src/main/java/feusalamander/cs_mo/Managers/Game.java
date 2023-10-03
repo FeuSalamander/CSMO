@@ -1,20 +1,19 @@
 package feusalamander.cs_mo.Managers;
 
-import feusalamander.cs_mo.Enum.Weapons;
 import feusalamander.cs_mo.Gui.GuiTool;
+import feusalamander.cs_mo.Runnables.Defusing;
 import feusalamander.cs_mo.Runnables.GameTick;
 import feusalamander.cs_mo.Runnables.Planting;
 import it.unimi.dsi.fastutil.Pair;
-import me.deecaad.weaponmechanics.weapon.weaponevents.WeaponMeleeHitEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,10 +32,10 @@ import static feusalamander.cs_mo.CS_MO.main;
 public class Game implements Listener {
     private String mapName;
     private final List<Player> players;
-    private final List<Player> AT = new ArrayList<>();
+    private final List<Player> CT = new ArrayList<>();
     private final List<Player> T = new ArrayList<>();
     private final Location[] place;
-    private final List<Location> atSpawns = new ArrayList<>();
+    private final List<Location> ctSpawns = new ArrayList<>();
     private final List<Location> tSpawns = new ArrayList<>();
     private final HashMap<Player, Integer> money = new HashMap<>();
     private BossBar bar;
@@ -46,6 +45,8 @@ public class Game implements Listener {
     private GameTick tick;
     private Pair<Boolean, Location> bombPlanted = Pair.of(false, null);
     private final List<Item> items = new ArrayList<>();
+    public boolean planting;
+    public boolean defusing;
     public Game(List<Player> players){
         this.players = players;
         main.getGames().add(this);
@@ -82,18 +83,18 @@ public class Game implements Listener {
         for(int i = 0; i<players.size(); i++){
             Player p = dump.get(main.random.nextInt(dump.size()));
             dump.remove(p);
-            if(AT.size() < players.size()/2){
-                AT.add(p);
+            if(CT.size() < players.size()/2){
+                CT.add(p);
             }else{
                 T.add(p);
             }
             money.put(p, 800);
         }
-        for(Player p : AT)p.sendMessage("§9Your are an AT");
+        for(Player p : CT)p.sendMessage("§9Your are a CT");
         for(Player p : T)p.sendMessage("§6Your are a T");
     }
     private void createSpawns(){
-        int size = Math.max(AT.size(), T.size());
+        int size = Math.max(CT.size(), T.size());
         Location mainAT = place[0].clone();
         Location mainT = place[1].clone();
         for(int i = 0; i<size; i++){
@@ -101,7 +102,7 @@ public class Game implements Listener {
             double z = place[0].z()+(main.random.nextInt(6)-2.5);
             mainAT.setX(x);
             mainAT.setZ(z);
-            atSpawns.add(mainAT);
+            ctSpawns.add(mainAT);
         }
         for(int i = 0; i<size; i++){
             double x = place[1].x()+(main.random.nextInt(6)-2.5);
@@ -112,9 +113,9 @@ public class Game implements Listener {
         }
     }
     public void chooseSpawns(){
-        List<Location> dumpAT = new ArrayList<>(atSpawns);
+        List<Location> dumpAT = new ArrayList<>(ctSpawns);
         List<Location> dumpT = new ArrayList<>(tSpawns);
-        for(Player p : AT){
+        for(Player p : CT){
             Location loc = dumpAT.get(main.random.nextInt(dumpAT.size()));
             dumpAT.remove(loc);
             p.teleport(loc);
@@ -133,23 +134,23 @@ public class Game implements Listener {
         objective.getScore(" ").setScore(8);
         objective.getScore("§cBomb: ").setScore(7);
         objective.getScore("  ").setScore(6);
-        objective.getScore("§9AT: ").setScore(5);
+        objective.getScore("§9CT: ").setScore(5);
         objective.getScore("§6T: ").setScore(4);
         objective.getScore("   ").setScore(3);
         objective.getScore("    ").setScore(1);
         objective.getScore("§e"+main.getConf().getServerip()).setScore(0);
 
         Team bombV = sb.registerNewTeam("bombV");
-        Team atV = sb.registerNewTeam("atV");
+        Team atV = sb.registerNewTeam("ctV");
         Team tV = sb.registerNewTeam("tV");
         bombV.addEntry("§cBomb: ");
-        atV.addEntry("§9AT: ");
+        atV.addEntry("§9CT: ");
         tV.addEntry("§6T: ");
 
-        Team AT = sb.registerNewTeam("AT");
+        Team AT = sb.registerNewTeam("CT");
         Team T = sb.registerNewTeam("T");
 
-        AT.setPrefix("§9AT ");
+        AT.setPrefix("§9CT ");
         T.setPrefix("§6T ");
 
         AT.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
@@ -157,7 +158,7 @@ public class Game implements Listener {
 
         for(Player p : players){
             p.setScoreboard(sb);
-            if(this.AT.contains(p))AT.addPlayer(p);
+            if(this.CT.contains(p))AT.addPlayer(p);
             if(this.T.contains(p))T.addPlayer(p);
             Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+money.get(p)).setScore(2);
         }
@@ -209,11 +210,13 @@ public class Game implements Listener {
         }
     }
     public void plant(Player p){
+        if(planting)return;
         if(!T.contains(p))return;
         new Planting(p, this).runTaskTimer(main, 0, 4);
     }
     public void defuse(Player p){
-        Bukkit.broadcastMessage("called");
+        if(defusing)return;
+        new Defusing(p, this).runTaskTimer(main, 0, 20);
     }
     public List<Player> getPlayers() {
         return players;
@@ -233,8 +236,8 @@ public class Game implements Listener {
     public int getRound() {
         return round;
     }
-    public List<Player> getAT() {
-        return AT;
+    public List<Player> getCT() {
+        return CT;
     }
     public List<Player> getT() {
         return T;
@@ -262,6 +265,11 @@ public class Game implements Listener {
         this.money.replace(p, money);
         Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.money.get(p)).setScore(2);
     }
+    public void removeBomb(){
+        if(getBombPlanted().left())for(Entity entity : getBombPlanted().right().getNearbyEntities(0.5, 0.5, 0.5))if(entity instanceof ArmorStand)entity.remove();
+        Objects.requireNonNull(getSb().getTeam("bombV")).setSuffix("Not Planted");
+        setBombPlanted(false, null);
+    }
     @EventHandler
     private void onMove(PlayerMoveEvent e){
         if(!players.contains(e.getPlayer()))return;
@@ -273,7 +281,7 @@ public class Game implements Listener {
     }
     @EventHandler
     private void onHit(EntityDamageByEntityEvent e){
-        if(e.getEntity() instanceof ArmorStand s&& Objects.requireNonNull(s.getCustomName()).equalsIgnoreCase("§4Bomb")&&e.getDamager() instanceof Player p&&AT.contains(p)){
+        if(e.getEntity() instanceof ArmorStand s&& Objects.requireNonNull(s.getCustomName()).equalsIgnoreCase("§4Bomb")&&e.getDamager() instanceof Player p&& CT.contains(p)){
             e.setDamage(0);
             defuse(p);
         }

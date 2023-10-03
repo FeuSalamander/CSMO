@@ -6,12 +6,9 @@ import feusalamander.cs_mo.Gui.TBuyMenu;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Runnables.Starting;
 import it.unimi.dsi.fastutil.Pair;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -114,7 +111,7 @@ public class GuiClicks implements Listener {
         }
         if(name.equalsIgnoreCase("§aShop")){
             for(Game game : main.getGames()){
-                if(game.getAT().contains(p)){p.openInventory(AtBuyMenu.menu);return;}
+                if(game.getCT().contains(p)){p.openInventory(AtBuyMenu.menu);return;}
                 if(game.getT().contains(p)){p.openInventory(TBuyMenu.menu);return;}
             }
         }

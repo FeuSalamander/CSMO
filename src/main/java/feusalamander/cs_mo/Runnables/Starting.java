@@ -39,6 +39,7 @@ public class Starting extends BukkitRunnable {
         for(Player p : players){
             main.getNone().remove(p);
             p.getInventory().clear();
+            p.setLevel(0);
         }
         new Game(players);
     }
