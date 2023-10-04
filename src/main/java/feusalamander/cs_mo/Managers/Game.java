@@ -172,7 +172,11 @@ public class Game implements Listener {
         for(Player p : players)bar.addPlayer(p);
     }
     public void updateBar(){
-        bar.setProgress((double) round /20);
+        if(round < 13){
+            bar.setProgress((double) (round-1) /12);
+        }else{
+            bar.setProgress((double) (round-13)/12);
+        }
     }
     private void start(){
         tick = new GameTick(this);
@@ -197,6 +201,14 @@ public class Game implements Listener {
         bar.removePlayer(p);
     }
     public void changeSide(){
+        int dump = score[0];
+        score[0] = score[1];
+        score[1] = dump;
+        List<Player> dumpList = new ArrayList<>(CT);
+        CT.clear();
+        CT.addAll(T);
+        T.clear();
+        T.addAll(dumpList);
     }
     public void giveShop(boolean give){
         if(give){

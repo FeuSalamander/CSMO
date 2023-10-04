@@ -39,6 +39,7 @@ public class GameTick extends BukkitRunnable {
             rest = false;
             game.giveShop(false);
         }else{
+            if(game.getRound() == 13)game.changeSide();
             color = "§f";
             for(Item item : game.getItems())item.remove();
             score();
@@ -51,7 +52,7 @@ public class GameTick extends BukkitRunnable {
             for(Player p :game.getPlayers())p.setHealth(20);
             bomb();
         }
-        if(game.getRound() == 13)game.changeSide();
+        if(game.getRound() > 24)Bukkit.broadcastMessage("game finished");
     }
     public boolean isRest() {
         return rest;
