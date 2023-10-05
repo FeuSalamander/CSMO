@@ -22,7 +22,7 @@ public class PlayerData {
         try{
             config.save(f);
         } catch (IOException e) {
-            e.printStackTrace();
+            e.getCause();
         }
     }
     public void createUuid(UUID uuid1){

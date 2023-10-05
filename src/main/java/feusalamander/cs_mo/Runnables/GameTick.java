@@ -3,14 +3,13 @@ package feusalamander.cs_mo.Runnables;
 import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Managers.Game;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.map.MapView;
+import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.Objects;
+
+import java.util.Arrays;
 
 import static feusalamander.cs_mo.CS_MO.main;
 @SuppressWarnings("deprecation")
@@ -35,15 +34,15 @@ public class GameTick extends BukkitRunnable {
     }
     private void changeRound(){
         if(rest){
-            time = 115;
+            time = 30;//115
             rest = false;
             game.giveShop(false);
         }else{
-            if(game.getRound() == 13)game.changeSide();
             color = "§f";
             for(Item item : game.getItems())item.remove();
             score();
-            time = 15;
+            time = 1;//15
+            if(game.getRound() == 12)game.changeSide();
             game.addRound();
             game.updateBar();
             rest = true;
@@ -52,7 +51,7 @@ public class GameTick extends BukkitRunnable {
             for(Player p :game.getPlayers())p.setHealth(20);
             bomb();
         }
-        if(game.getRound() > 24)Bukkit.broadcastMessage("game finished");
+        if(game.getRound() > 24)end();
     }
     public boolean isRest() {
         return rest;
@@ -78,5 +77,64 @@ public class GameTick extends BukkitRunnable {
     public void defuse(){
         time = 1;
         color = "§f";
+    }
+    private void end(){
+        String won;
+        if(game.getScore()[0]<game.getScore()[1]){
+            won = "T";
+        }else{
+            won = "CT";
+        }
+        if(game.getScore()[0]==game.getScore()[1]){
+            won = "none";
+        }
+        for(Player p : game.getPlayers()){
+            p.teleport(main.getConf().getSpawn());
+            setWins(p, won);
+            p.getInventory().clear();
+            p.setScoreboard(main.getScoreboard());
+            main.getNone().add(p);
+            game.getBar().removePlayer(p);
+        }
+        main.getPlayerData().save();
+        main.getGames().remove(game);
+        HandlerList.unregisterAll(game);
+        cancel();
+    }
+    private void setWins(Player p, String won){
+        if(won.equalsIgnoreCase("CT")){
+            if(game.getCT().contains(p)){
+                main.getPlayerData().addWins(p.getUniqueId(), 1);
+                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, true));
+            }else {
+                main.getPlayerData().addLooses(p.getUniqueId(), 1);
+                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, false));
+            }
+            p.sendMessage("§5The §9CTs §5won the game");
+            return;
+        }
+        if(won.equalsIgnoreCase("T")){
+            if(game.getT().contains(p)){
+                main.getPlayerData().addWins(p.getUniqueId(), 1);
+                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, true));
+            }else {
+                main.getPlayerData().addLooses(p.getUniqueId(), 1);
+                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, false));
+            }
+            p.sendMessage("§5The §9Ts §5won the game");
+            return;
+        }
+        p.sendMessage("§5The game resulted in a tie");
+    }
+    private int newElo(Player p, boolean won){
+        int actualOutcome = won ? 1 : 0;
+        int pElo = main.getPlayerData().getElo(p.getUniqueId());
+        int gameElo = game.getGameElo();
+        int[] rankArray = game.getStats().get(p);
+        float rank = (float) ((rankArray[0]+1)/(rankArray[1]+1))*5;
+        int finalElo = (int) ((actualOutcome - 1.0 / (1.0 + Math.pow(10, (gameElo - pElo) / 400.0))) + rank);
+        Bukkit.broadcastMessage(finalElo+" ");
+        if(pElo-finalElo<0)return -pElo;
+        return finalElo;
     }
 }

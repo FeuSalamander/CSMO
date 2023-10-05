@@ -5,7 +5,6 @@ import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Gui.TBuyMenu;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Runnables.Starting;
-import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -20,7 +19,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import static feusalamander.cs_mo.CS_MO.main;
 
@@ -54,7 +55,7 @@ public class GuiClicks implements Listener {
             e.setCancelled(true);
             ItemStack item = e.getCurrentItem();
             if(item != null&&item.hasItemMeta()&&item.getItemMeta().hasLore()){
-                String name = item.getItemMeta().getLore().get(0);
+                String name = Objects.requireNonNull(item.getItemMeta().getLore()).get(0);
                 if(name.equalsIgnoreCase(" "))return;
                 AtBuyMenu.buy((Player) e.getWhoClicked(), name);
             }
@@ -66,18 +67,14 @@ public class GuiClicks implements Listener {
         int playerElo = main.getPlayerData().getElo(p.getUniqueId());
         int finalElo = playerElo;
         if(gameElo.length == 1){
-            main.getQueue().add(Pair.of(
-                    playerElo,
-                    List.of(p)));
+            HashMap<Player, Integer> map = new HashMap<>();
+            map.put(p, finalElo);
+            main.getQueue().add(map);
         }else{
-            List<Player> list = new ArrayList<>(main.getQueue().get(gameElo[1]).right());
-            list.add(p);
-            int elo = gameElo[0];
-            elo = (elo+playerElo)/2;
-            main.getQueue().remove(main.getQueue().get(gameElo[1]));
-            main.getQueue().add(Pair.of(elo, list));
-            finalElo = elo;
-            if(list.size() == main.getConf().getMinPlayer())starting(list);
+            HashMap<Player, Integer> map = main.getQueue().get(gameElo[1]);
+            map.put(p, playerElo);
+            finalElo = gameElo[0];
+            if(map.size() == main.getConf().getMinPlayer())starting(new ArrayList<>(map.keySet()), finalElo);
         }
         p.sendMessage("§dYour are queued to Ranked CS:MO with "+finalElo+" elo");
         main.getActionBarTick().broke = false;
@@ -85,17 +82,18 @@ public class GuiClicks implements Listener {
     }
     private int[] whatElo(Player p){
         int elo = main.getPlayerData().getElo(p.getUniqueId());
-        for(Pair<Integer, List<Player>> pair: main.getQueue()){
-            if((pair.first()-main.getConf().getMatchMaking())<=elo&&
-                    elo<=(pair.first()+main.getConf().getMatchMaking())&&
-            pair.right().size() < 10){
-                return new int[]{pair.first(), main.getQueue().indexOf(pair)};
+        for(HashMap<Player, Integer> map : main.getQueue()){
+            int moyenne = (int) map.values().stream().mapToInt(d -> d).average().orElse(0);
+            if((moyenne-main.getConf().getMatchMaking())<=elo&&
+                    elo<=(moyenne+main.getConf().getMatchMaking())&&
+            map.size() < 10){
+                return new int[]{moyenne, main.getQueue().indexOf(map)};
             }
         }
         return new int[]{-1};
     }
-    private void starting(List<Player> players){
-        Starting timer = new Starting(players);
+    private void starting(List<Player> players, int elo){
+        Starting timer = new Starting(players, elo);
         timer.runTaskTimer(main, 20, 20);
         main.getStarting().add(timer);
     }

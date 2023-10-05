@@ -2,4 +2,12 @@ mysql:
   enabled: false
 matchmaking: 10 #if players have + or - this elo they wil be able to match together
 minPlayers: 2
+spawn:
+  ==: org.bukkit.Location
+  world: world
+  x: -3
+  y: 83
+  z: -23
+  pitch: 0.0
+  yaw: 0.0
 serverip: salamanderia.ddns.net

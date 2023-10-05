@@ -11,7 +11,7 @@
 
     <name>CS:MO</name>
 
-    <description>CS:MO is a the plugin that brings the CS:GO game to minecraft !</description>
+    <description>CS:MO is a plugin that brings the CS:GO game to minecraft !</description>
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -29,10 +29,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 public final class CS_MO extends JavaPlugin {
     public static CS_MO main;
@@ -43,7 +40,7 @@ public final class CS_MO extends JavaPlugin {
     private final List<Map> maps = new ArrayList<>();
     private MapConfig mapConf;
     private Scoreboard scoreboard;
-    private final List<Pair<Integer, List<Player>>> queue = new ArrayList<>();
+    private final List<HashMap<Player, Integer>> queue = new ArrayList<>();
     private final List<Player> none = new ArrayList<>();
     private final List<Starting> starting = new ArrayList<>();
     private final List<Game> games = new ArrayList<>();
@@ -108,7 +105,7 @@ public final class CS_MO extends JavaPlugin {
     public PlayerData getPlayerData() {
         return playerData;
     }
-    public List<Pair<Integer, List<Player>>> getQueue() {
+    public List<HashMap<Player, Integer>> getQueue() {
         return queue;
     }
     public ActionBarTick getActionBarTick() {
@@ -125,15 +122,10 @@ public final class CS_MO extends JavaPlugin {
     }
     public void removeQueue(Player p){
         for(Starting timers : starting){timers.getPlayers().remove(p);}
-        for(Pair<Integer, List<Player>> pair : queue){
-            if(pair.right().contains(p)){
-                List<Player> playerList = new ArrayList<>(pair.right());
-                playerList.remove(p);
-                int elo = pair.left();
-                queue.remove(pair);
-                if(!playerList.isEmpty()){
-                    queue.add(Pair.of(elo, playerList));
-                }
+        for(HashMap<Player, Integer> map : queue){
+            if(map.containsKey(p)){
+                map.remove(p);
+                if(map.isEmpty())queue.remove(map);
                 return;
             }
         }

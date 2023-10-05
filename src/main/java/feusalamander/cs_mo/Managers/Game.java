@@ -17,7 +17,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
@@ -30,6 +29,7 @@ import java.util.*;
 import static feusalamander.cs_mo.CS_MO.main;
 @SuppressWarnings("deprecation")
 public class Game implements Listener {
+    private final int gameElo;
     private String mapName;
     private final List<Player> players;
     private final List<Player> CT = new ArrayList<>();
@@ -38,6 +38,7 @@ public class Game implements Listener {
     private final List<Location> ctSpawns = new ArrayList<>();
     private final List<Location> tSpawns = new ArrayList<>();
     private final HashMap<Player, Integer> money = new HashMap<>();
+    private final HashMap<Player, int[]> stats = new HashMap<>();
     private BossBar bar;
     private final int[] score = new int[2];
     private int round = 1;
@@ -47,8 +48,9 @@ public class Game implements Listener {
     private final List<Item> items = new ArrayList<>();
     public boolean planting;
     public boolean defusing;
-    public Game(List<Player> players){
+    public Game(List<Player> players, int elo){
         this.players = players;
+        this.gameElo = elo;
         main.getGames().add(this);
         main.getServer().getPluginManager().registerEvents(this, main);
         place = choosePlace();
@@ -57,7 +59,6 @@ public class Game implements Listener {
         chooseSpawns();
         scoreboard();
         bossBar();
-
         start();
     }
     private Location[] choosePlace(){
@@ -89,6 +90,7 @@ public class Game implements Listener {
                 T.add(p);
             }
             money.put(p, 800);
+            stats.put(p, new int[]{0, 0});
         }
         for(Player p : CT)p.sendMessage("§9Your are a CT");
         for(Player p : T)p.sendMessage("§6Your are a T");
@@ -185,9 +187,6 @@ public class Game implements Listener {
         giveShop(true);
         tick.bomb();
     }
-    private void unload(){
-        HandlerList.unregisterAll(this);
-    }
     private void Inventory(){
         for(Player p : players){
             for(int i = 0; i<36; i++)p.getInventory().setItem(i, GuiTool.pane);
@@ -268,6 +267,12 @@ public class Game implements Listener {
     }
     public GameTick getTick() {
         return tick;
+    }
+    public HashMap<Player, int[]> getStats() {
+        return stats;
+    }
+    public int getGameElo() {
+        return gameElo;
     }
     public HashMap<Player, Integer> getMoney() {
         return money;
