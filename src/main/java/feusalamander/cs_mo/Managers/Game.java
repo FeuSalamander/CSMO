@@ -40,6 +40,7 @@ public class Game implements Listener {
     private final HashMap<Player, Integer> money = new HashMap<>();
     private final HashMap<Player, int[]> stats = new HashMap<>();
     private BossBar bar;
+    private BossBar bar2;
     private final int[] score = new int[2];
     private int round = 1;
     private Scoreboard sb;
@@ -48,6 +49,7 @@ public class Game implements Listener {
     private final List<Item> items = new ArrayList<>();
     public boolean planting;
     public boolean defusing;
+    private Pair<Map, Integer> map;
     public Game(List<Player> players, int elo){
         this.players = players;
         this.gameElo = elo;
@@ -71,6 +73,7 @@ public class Game implements Listener {
                 if(pair.left()){
                     Location[] map1 = pair.right();
                     map.setPair(false, i);
+                    this.map = Pair.of(map, i);
                     return map1;
                 }
             }
@@ -169,15 +172,20 @@ public class Game implements Listener {
         tV.setSuffix(String.valueOf(T.getSize()));
     }
     private void bossBar(){
-        bar = Bukkit.createBossBar("§90 §f1:55 §60", BarColor.WHITE, BarStyle.SEGMENTED_12);
+        bar = Bukkit.createBossBar("§90 §f1:55 §60", BarColor.BLUE, BarStyle.SEGMENTED_12);
+        bar2 = Bukkit.createBossBar("§90 §f1:55 §60", BarColor.RED, BarStyle.SEGMENTED_12);
         bar.setProgress(0);
-        for(Player p : players)bar.addPlayer(p);
+        bar2.setProgress(0);
+        for(Player p : CT)bar.addPlayer(p);
+        for(Player p : T)bar2.addPlayer(p);
     }
     public void updateBar(){
         if(round < 13){
             bar.setProgress((double) (round-1) /12);
+            bar2.setProgress((double) (round-1) /12);
         }else{
             bar.setProgress((double) (round-13)/12);
+            bar2.setProgress((double) (round-13)/12);
         }
     }
     private void start(){
@@ -198,6 +206,7 @@ public class Game implements Listener {
         players.remove(p);
         p.setScoreboard(main.getScoreboard());
         bar.removePlayer(p);
+        bar2.removePlayer(p);
     }
     public void changeSide(){
         int dump = score[0];
@@ -208,15 +217,19 @@ public class Game implements Listener {
         CT.addAll(T);
         T.clear();
         T.addAll(dumpList);
+        bar.removeAll();
+        bar2.removeAll();
+        for(Player p : CT)bar.addPlayer(p);
+        for(Player p : T)bar2.addPlayer(p);
     }
     public void giveShop(boolean give){
         if(give){
             for(Player p : players){
-                p.getInventory().setItem(8, main.getShopItem());
+                p.getInventory().setItem(8, GuiTool.shop);
             }
         }else{
             for(Player p : players){
-                p.getInventory().setItem(8, GuiTool.pane);
+                p.getInventory().setItem(8, GuiTool.map);
             }
         }
     }
@@ -234,6 +247,9 @@ public class Game implements Listener {
     }
     public BossBar getBar() {
         return bar;
+    }
+    public BossBar getBar2() {
+        return bar2;
     }
     public int[] getScore() {
         return score;
@@ -276,6 +292,9 @@ public class Game implements Listener {
     }
     public HashMap<Player, Integer> getMoney() {
         return money;
+    }
+    public Pair<Map, Integer> getMap() {
+        return map;
     }
     public void removeMoney(Player p, int money){
         Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.money.get(p)).resetScore();

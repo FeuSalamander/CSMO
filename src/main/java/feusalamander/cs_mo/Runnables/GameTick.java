@@ -26,6 +26,7 @@ public class GameTick extends BukkitRunnable {
         if(!main.getGames().contains(game)){cancel();return;}
         if(time == 0)changeRound();
         game.getBar().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
+        game.getBar2().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
         time--;
     }
     private String time(){
@@ -34,14 +35,14 @@ public class GameTick extends BukkitRunnable {
     }
     private void changeRound(){
         if(rest){
-            time = 30;//115
+            time = 115;//115
             rest = false;
             game.giveShop(false);
         }else{
             color = "§f";
             for(Item item : game.getItems())item.remove();
             score();
-            time = 1;//15
+            time = 15;//15
             if(game.getRound() == 12)game.changeSide();
             game.addRound();
             game.updateBar();
@@ -95,8 +96,10 @@ public class GameTick extends BukkitRunnable {
             p.setScoreboard(main.getScoreboard());
             main.getNone().add(p);
             game.getBar().removePlayer(p);
+            game.getBar2().removePlayer(p);
         }
         main.getPlayerData().save();
+        game.getMap().first().setPair(true, game.getMap().right());
         main.getGames().remove(game);
         HandlerList.unregisterAll(game);
         cancel();
@@ -133,8 +136,7 @@ public class GameTick extends BukkitRunnable {
         int[] rankArray = game.getStats().get(p);
         float rank = (float) ((rankArray[0]+1)/(rankArray[1]+1))*5;
         int finalElo = (int) ((actualOutcome - 1.0 / (1.0 + Math.pow(10, (gameElo - pElo) / 400.0))) + rank);
-        Bukkit.broadcastMessage(finalElo+" ");
-        if(pElo-finalElo<0)return -pElo;
+        if(pElo+finalElo<0)return -pElo;
         return finalElo;
     }
 }

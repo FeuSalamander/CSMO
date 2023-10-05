@@ -44,7 +44,6 @@ public final class CS_MO extends JavaPlugin {
     private final List<Player> none = new ArrayList<>();
     private final List<Starting> starting = new ArrayList<>();
     private final List<Game> games = new ArrayList<>();
-    private ItemStack shopItem;
     public final Random random = new Random();
 
     @Override
@@ -59,7 +58,6 @@ public final class CS_MO extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new onJoin(), this);
         scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
         none.addAll(getServer().getOnlinePlayers());
-        shopItem = GuiTool.getItem(Material.CHEST, "§aShop");
         Objects.requireNonNull(Bukkit.getWorld("world")).setGameRule(GameRule.KEEP_INVENTORY, true);
     }
     @Override
@@ -68,6 +66,7 @@ public final class CS_MO extends JavaPlugin {
         getLogger().info("CS:MO by FeuSalamander is unloaded");
         for(Game game : games){
             game.getBar().removeAll();
+            game.getBar2().removeAll();
             for(Item item : game.getItems())item.remove();
             if(game.getBombPlanted().left())for(Entity entity : game.getBombPlanted().right().getNearbyEntities(0.1, 0.1, 0.1))if(entity instanceof ArmorStand){entity.remove();return;}
         }
@@ -138,8 +137,5 @@ public final class CS_MO extends JavaPlugin {
     }
     public Scoreboard getScoreboard(){
         return scoreboard;
-    }
-    public ItemStack getShopItem() {
-        return shopItem;
     }
 }
