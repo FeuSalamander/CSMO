@@ -5,6 +5,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +21,7 @@ public class Map {
     private final String name;
     private final boolean enabled;
     private final List<Pair<Boolean,Location[]>> schematics = new ArrayList<>();
+    private Image img = null;
 
     public Map(final String id){
         this.id = id;
@@ -31,6 +36,12 @@ public class Map {
             map[0] = section2.getLocation(key+".spawns.AT");
             map[1] = section2.getLocation(key+".spawns.T");
             schematics.add(Pair.of(true, map));
+        }
+        try{
+            File file = new File(main.getDataFolder(), id+".jpg");
+            img = ImageIO.read(file);
+        } catch (Exception e) {
+            main.getLogger().info("There is a problem with the picture of a map");
         }
     }
     public String getId() {
@@ -49,5 +60,8 @@ public class Map {
         Location[] map = schematics.get(number).right();
         schematics.remove(number);
         schematics.add(Pair.of(state, map));
+    }
+    public Image getImg() {
+        return img;
     }
 }

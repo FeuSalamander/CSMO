@@ -14,6 +14,8 @@ public class MapConfig {
     public MapConfig(){
         f = new File(main.getDataFolder(), "Maps.yml");
         if(!f.exists()) main.saveResource("Maps.yml", false);
+        File f2 = new File(main.getDataFolder(), "pictures");
+        if(!f2.exists()) main.saveResource("pictures", false);
         this.config = YamlConfiguration.loadConfiguration(f);
         maps = config.getKeys(false);
     }

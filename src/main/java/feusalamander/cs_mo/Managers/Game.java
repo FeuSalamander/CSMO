@@ -22,7 +22,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.map.*;
 import org.bukkit.scoreboard.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -50,6 +53,8 @@ public class Game implements Listener {
     public boolean planting;
     public boolean defusing;
     private Pair<Map, Integer> map;
+    private ItemStack miniMapCT;
+    private ItemStack miniMapT;
     public Game(List<Player> players, int elo){
         this.players = players;
         this.gameElo = elo;
@@ -61,6 +66,7 @@ public class Game implements Listener {
         chooseSpawns();
         scoreboard();
         bossBar();
+        createMiniMap();
         start();
     }
     private Location[] choosePlace(){
@@ -228,8 +234,11 @@ public class Game implements Listener {
                 p.getInventory().setItem(8, GuiTool.shop);
             }
         }else{
-            for(Player p : players){
-                p.getInventory().setItem(8, GuiTool.map);
+            for(Player p : CT){
+                p.getInventory().setItem(8, miniMapCT);
+            }
+            for(Player p : T){
+                p.getInventory().setItem(8, miniMapT);
             }
         }
     }
@@ -241,6 +250,28 @@ public class Game implements Listener {
     public void defuse(Player p){
         if(defusing)return;
         new Defusing(p, this).runTaskTimer(main, 0, 20);
+    }
+    private void createMiniMap(){
+        //CT
+        ItemStack item = GuiTool.getItem(Material.FILLED_MAP, "§aMap");
+        MapMeta mapMeta = (MapMeta) item.getItemMeta();
+        MapView mapView = Bukkit.createMap(Objects.requireNonNull(Bukkit.getWorld("world")));
+        mapView.getRenderers().clear();
+        MapCursorCollection mapCursorCollection = new MapCursorCollection();
+        mapCursorCollection.addCursor(new MapCursor((byte) 70, (byte) 70, (byte) 5, MapCursor.Type.RED_POINTER, true));
+        mapView.setScale(MapView.Scale.CLOSE);
+        mapView.setLocked(true);
+        mapView.addRenderer(new MapRenderer() {
+            @Override
+            public void render(@NotNull MapView mapView, @NotNull MapCanvas mapCanvas, @NotNull Player player) {
+                mapCanvas.setCursors(mapCursorCollection);
+                mapCanvas.drawImage(0, 0, map.first().getImg());
+            }
+        });
+        mapMeta.setMapView(mapView);
+        item.setItemMeta(mapMeta);
+        miniMapCT = item;
+        //T
     }
     public List<Player> getPlayers() {
         return players;

@@ -10,10 +10,17 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.map.*;
 import org.jetbrains.annotations.NotNull;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import static feusalamander.cs_mo.CS_MO.main;
 
 @SuppressWarnings("deprecation")
 public final class GuiTool {
@@ -21,7 +28,6 @@ public final class GuiTool {
     public static final ItemStack bomb = getItem(Material.NETHER_STAR, "§4Bomb");
     public static final ItemStack kit = getItem(Material.SHEARS, "§9Defuse Kit");
     public static final ItemStack shop = getItem(Material.CHEST, "§aShop");
-    public static final ItemStack map = getMap();
     public static ItemStack getItem(
                            Material material,
                            String name,
@@ -47,23 +53,6 @@ public final class GuiTool {
         SkullMeta meta = (SkullMeta) item.getItemMeta();
         meta.setDisplayName(name);
         item.setItemMeta(meta);
-        return item;
-    }
-    public static ItemStack getMap(){
-        ItemStack item = getItem(Material.FILLED_MAP, "§aMap");
-        MapMeta mapMeta = (MapMeta) item.getItemMeta();
-        MapView mapView = Bukkit.createMap(Objects.requireNonNull(Bukkit.getWorld("world")));
-        mapView.addRenderer(new MapRenderer() {
-            @Override
-            public void render(@NotNull MapView mapView, @NotNull MapCanvas mapCanvas, @NotNull Player player) {
-                MapCursorCollection mapCursorCollection = new MapCursorCollection();
-                mapCursorCollection.addCursor(new MapCursor((byte) 70, (byte) 70, (byte) 5, MapCursor.Type.RED_POINTER, true));
-                mapCanvas.setCursors(mapCursorCollection);
-            }
-        });
-
-        mapMeta.setMapView(mapView);
-        item.setItemMeta(mapMeta);
-        return item;
+        return item;//104*130 52 65
     }
 }
