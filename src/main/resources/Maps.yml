@@ -7,16 +7,24 @@ dust2:
         AT:
           ==: org.bukkit.Location
           world: world
-          x: -3
-          y: 83
-          z: -23
+          x: -240
+          y: 101
+          z: 28
           pitch: 0.0
           yaw: 0.0
         T:
           ==: org.bukkit.Location
           world: world
-          x: -73
-          y: 91
-          z: -62
+          x: -277
+          y: 109
+          z: 97
           pitch: 0.0
           yaw: 0.0
+      corner: #the left top corner of the map needs to be the lowest x and z of the rest of the map
+        ==: org.bukkit.Location
+        world: world
+        x: -305
+        y: 100
+        z: -16
+        pitch: 0.0
+        yaw: 0.0

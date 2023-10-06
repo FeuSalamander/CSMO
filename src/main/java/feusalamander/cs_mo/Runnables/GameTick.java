@@ -2,6 +2,7 @@ package feusalamander.cs_mo.Runnables;
 
 import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Managers.Game;
+import feusalamander.cs_mo.Managers.MiniMapRenderer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -27,6 +28,7 @@ public class GameTick extends BukkitRunnable {
         if(time == 0)changeRound();
         game.getBar().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
         game.getBar2().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
+        updateCursors();
         time--;
     }
     private String time(){
@@ -138,5 +140,10 @@ public class GameTick extends BukkitRunnable {
         int finalElo = (int) ((actualOutcome - 1.0 / (1.0 + Math.pow(10, (gameElo - pElo) / 400.0))) + rank);
         if(pElo+finalElo<0)return -pElo;
         return finalElo;
+    }
+    private void updateCursors(){
+        for (MiniMapRenderer miniMapRenderer : game.getRenderers()){
+            miniMapRenderer.updateCursors();
+        }
     }
 }

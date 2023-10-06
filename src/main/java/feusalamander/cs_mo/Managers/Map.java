@@ -32,13 +32,14 @@ public class Map {
         final ConfigurationSection section2 = section.getConfigurationSection("maps");
         assert section2 != null;
         for(String key : section2.getKeys(false)){
-            Location[] map = new Location[2];
+            Location[] map = new Location[3];
             map[0] = section2.getLocation(key+".spawns.AT");
             map[1] = section2.getLocation(key+".spawns.T");
+            map[2] = section2.getLocation(key+".corner");
             schematics.add(Pair.of(true, map));
         }
         try{
-            File file = new File(main.getDataFolder(), id+".jpg");
+            File file = new File(main.getDataFolder()+"/pictures", id+".jpg");
             img = ImageIO.read(file);
         } catch (Exception e) {
             main.getLogger().info("There is a problem with the picture of a map");

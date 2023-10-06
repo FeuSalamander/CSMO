@@ -55,6 +55,7 @@ public class Game implements Listener {
     private Pair<Map, Integer> map;
     private ItemStack miniMapCT;
     private ItemStack miniMapT;
+    private final List<MiniMapRenderer> renderers = new ArrayList<>();
     public Game(List<Player> players, int elo){
         this.players = players;
         this.gameElo = elo;
@@ -256,22 +257,20 @@ public class Game implements Listener {
         ItemStack item = GuiTool.getItem(Material.FILLED_MAP, "§aMap");
         MapMeta mapMeta = (MapMeta) item.getItemMeta();
         MapView mapView = Bukkit.createMap(Objects.requireNonNull(Bukkit.getWorld("world")));
-        mapView.getRenderers().clear();
-        MapCursorCollection mapCursorCollection = new MapCursorCollection();
-        mapCursorCollection.addCursor(new MapCursor((byte) 70, (byte) 70, (byte) 5, MapCursor.Type.RED_POINTER, true));
-        mapView.setScale(MapView.Scale.CLOSE);
-        mapView.setLocked(true);
-        mapView.addRenderer(new MapRenderer() {
-            @Override
-            public void render(@NotNull MapView mapView, @NotNull MapCanvas mapCanvas, @NotNull Player player) {
-                mapCanvas.setCursors(mapCursorCollection);
-                mapCanvas.drawImage(0, 0, map.first().getImg());
-            }
-        });
+        MiniMapRenderer renderer = new MiniMapRenderer(this, mapView, CT);
+        renderers.add(renderer);
         mapMeta.setMapView(mapView);
         item.setItemMeta(mapMeta);
         miniMapCT = item;
         //T
+        ItemStack item2 = GuiTool.getItem(Material.FILLED_MAP, "§aMap");
+        MapMeta mapMeta2 = (MapMeta) item2.getItemMeta();
+        MapView mapView2 = Bukkit.createMap(Objects.requireNonNull(Bukkit.getWorld("world")));
+        MiniMapRenderer renderer2 = new MiniMapRenderer(this, mapView2, T);
+        renderers.add(renderer2);
+        mapMeta2.setMapView(mapView2);
+        item2.setItemMeta(mapMeta2);
+        miniMapT = item2;
     }
     public List<Player> getPlayers() {
         return players;
@@ -312,8 +311,14 @@ public class Game implements Listener {
     public Scoreboard getSb() {
         return sb;
     }
+    public Location[] getPlace() {
+        return place;
+    }
     public GameTick getTick() {
         return tick;
+    }
+    public List<MiniMapRenderer> getRenderers() {
+        return renderers;
     }
     public HashMap<Player, int[]> getStats() {
         return stats;

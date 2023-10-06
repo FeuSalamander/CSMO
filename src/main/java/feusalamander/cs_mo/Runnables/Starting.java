@@ -27,6 +27,7 @@ public class Starting extends BukkitRunnable {
             p.sendTitle(colors[timer-1]+"§l"+timer+"s", "");
             p.setLevel(timer);
         }
+
         timer--;
     }
     public List<Player> getPlayers() {
