@@ -53,6 +53,6 @@ public final class GuiTool {
         SkullMeta meta = (SkullMeta) item.getItemMeta();
         meta.setDisplayName(name);
         item.setItemMeta(meta);
-        return item;//104*130 52 65
+        return item;
     }
 }

@@ -4,9 +4,12 @@ import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Managers.MiniMapRenderer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
+import org.bukkit.map.MapCursor;
 import org.bukkit.scheduler.BukkitRunnable;
 
 
@@ -29,6 +32,7 @@ public class GameTick extends BukkitRunnable {
         game.getBar().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
         game.getBar2().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
         updateCursors();
+        checkBomb();
         time--;
     }
     private String time(){
@@ -42,7 +46,12 @@ public class GameTick extends BukkitRunnable {
             game.giveShop(false);
         }else{
             color = "§f";
-            for(Item item : game.getItems())item.remove();
+            for(Item item : game.getItems()){
+                item.remove();
+                game.bombDropped = null;
+                game.getRenderers().get(1).changeBombT(null);
+                game.getRenderers().get(0).changeBombAT(null);
+            }
             score();
             time = 15;//15
             if(game.getRound() == 12)game.changeSide();
@@ -72,6 +81,7 @@ public class GameTick extends BukkitRunnable {
     public void bomb(){
         Player p = game.getT().get(main.random.nextInt(game.getT().size()));
         p.getInventory().setItem(7, GuiTool.bomb);
+        game.getRenderers().get(1).changeType(MapCursor.Type.MANSION, p);
     }
     public void plant(){
         time = 40;
@@ -145,5 +155,15 @@ public class GameTick extends BukkitRunnable {
         for (MiniMapRenderer miniMapRenderer : game.getRenderers()){
             miniMapRenderer.updateCursors();
         }
+    }
+    private void checkBomb(){
+        if(game.getBombDropped() == null)return;
+        for(Entity entity: game.bombDropped.getNearbyEntities(15, 5, 15)){
+            if(entity instanceof Player p&&game.getCT().contains(p)){
+                game.getRenderers().get(0).changeBombAT(game.getBombDropped().getLocation());
+                return;
+            }
+        }
+        game.getRenderers().get(0).changeBombAT(null);
     }
 }

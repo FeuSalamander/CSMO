@@ -20,12 +20,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.*;
 import org.bukkit.scoreboard.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -55,6 +55,7 @@ public class Game implements Listener {
     private Pair<Map, Integer> map;
     private ItemStack miniMapCT;
     private ItemStack miniMapT;
+    public Item bombDropped;
     private final List<MiniMapRenderer> renderers = new ArrayList<>();
     public Game(List<Player> players, int elo){
         this.players = players;
@@ -201,6 +202,14 @@ public class Game implements Listener {
         Inventory();
         giveShop(true);
         tick.bomb();
+        for(Player p : CT){
+            p.getInventory().setItem(EquipmentSlot.OFF_HAND, miniMapCT);
+            p.getInventory().setItem(8, GuiTool.pane);
+        }
+        for(Player p : T){
+            p.getInventory().setItem(EquipmentSlot.OFF_HAND, miniMapT);
+            p.getInventory().setItem(8, GuiTool.pane);
+        }
     }
     private void Inventory(){
         for(Player p : players){
@@ -235,11 +244,8 @@ public class Game implements Listener {
                 p.getInventory().setItem(8, GuiTool.shop);
             }
         }else{
-            for(Player p : CT){
-                p.getInventory().setItem(8, miniMapCT);
-            }
-            for(Player p : T){
-                p.getInventory().setItem(8, miniMapT);
+            for(Player p : players){
+                p.getInventory().setItem(8, GuiTool.pane);
             }
         }
     }
@@ -332,6 +338,10 @@ public class Game implements Listener {
     public Pair<Map, Integer> getMap() {
         return map;
     }
+
+    public Item getBombDropped() {
+        return bombDropped;
+    }
     public void removeMoney(Player p, int money){
         Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.money.get(p)).resetScore();
         this.money.replace(p, money);
@@ -371,6 +381,10 @@ public class Game implements Listener {
         if(item.getDisplayName().equalsIgnoreCase("§4Bomb")&&T.contains(e.getPlayer())){
             e.getPlayer().getInventory().setItem(7, GuiTool.bomb);
             e.getItem().remove();
+            getRenderers().get(1).changeType(MapCursor.Type.MANSION, e.getPlayer());
+            getRenderers().get(1).changeBombT(null);
+            bombDropped = null;
+            getRenderers().get(0).changeBombAT(null);
         }
     }
     @EventHandler
@@ -384,5 +398,10 @@ public class Game implements Listener {
         e.getPlayer().getInventory().setItem(e.getPlayer().getInventory().firstEmpty(), GuiTool.pane);
         e.getItemDrop().setUnlimitedLifetime(true);
         items.add(e.getItemDrop());
+        if(item.getType().equals(Material.NETHER_STAR)){
+            getRenderers().get(1).changeType(MapCursor.Type.GREEN_POINTER, e.getPlayer());
+            getRenderers().get(1).changeBombT(e.getItemDrop().getLocation());
+            bombDropped = e.getItemDrop();
+        }
     }
 }

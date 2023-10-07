@@ -28,3 +28,6 @@ dust2:
         z: -16
         pitch: 0.0
         yaw: 0.0
+      size:
+        x: 104
+        y: 130

@@ -10,6 +10,7 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.map.MapCursor;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Objects;
@@ -53,5 +54,6 @@ public class Planting extends BukkitRunnable {
         game.setBombPlanted(true, armorStand.getLocation());
         Objects.requireNonNull(game.getSb().getTeam("bombV")).setSuffix("Planted");
         game.getTick().plant();
+        game.getRenderers().get(1).changeType(MapCursor.Type.GREEN_POINTER, p);
     }
 }

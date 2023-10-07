@@ -22,6 +22,7 @@ public class Map {
     private final boolean enabled;
     private final List<Pair<Boolean,Location[]>> schematics = new ArrayList<>();
     private Image img = null;
+    private int[] size = new int[2];
 
     public Map(final String id){
         this.id = id;
@@ -37,6 +38,8 @@ public class Map {
             map[1] = section2.getLocation(key+".spawns.T");
             map[2] = section2.getLocation(key+".corner");
             schematics.add(Pair.of(true, map));
+            size[0] = section2.getInt(key+".size.x");
+            size[1] = section2.getInt(key+".size.y");
         }
         try{
             File file = new File(main.getDataFolder()+"/pictures", id+".jpg");
@@ -64,5 +67,9 @@ public class Map {
     }
     public Image getImg() {
         return img;
+    }
+
+    public int[] getSize() {
+        return size;
     }
 }

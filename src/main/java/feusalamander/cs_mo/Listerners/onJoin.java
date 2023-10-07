@@ -11,6 +11,7 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
 import static feusalamander.cs_mo.CS_MO.main;
 
@@ -43,6 +44,10 @@ public class onJoin implements Listener {
     }
     @EventHandler
     private void onRegen(EntityRegainHealthEvent e){
+        e.setCancelled(true);
+    }
+    @EventHandler
+    private void onSwap(PlayerSwapHandItemsEvent e){
         e.setCancelled(true);
     }
 }

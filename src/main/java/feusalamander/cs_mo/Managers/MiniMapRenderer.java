@@ -1,5 +1,6 @@
 package feusalamander.cs_mo.Managers;
 
+import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.map.*;
@@ -10,22 +11,30 @@ import java.util.List;
 
 public class MiniMapRenderer extends MapRenderer {
     private final Game game;
-    private final MapView mapView;
     private final MapCursorCollection mapCursorCollection;
     private final HashMap<Player, MapCursor> mapCursorHashMap = new HashMap<>();
+    private final int x;
+    private final int y;
+    private boolean first = true;
+    private Pair<MapCursor, Location> bombCursorT;
+    private Pair<MapCursor, Location> bombCursorAT;
     public MiniMapRenderer(Game game, MapView mapView, List<Player> players){
         this.game = game;
-        this.mapView = mapView;
         this.mapCursorCollection = new MapCursorCollection();
         mapView.getRenderers().clear();
         mapView.setLocked(true);
         addCursors(players);
         mapView.addRenderer(this);
+        this.x = game.getPlace()[2].getBlockX();
+        this.y = game.getPlace()[2].getBlockZ();
     }
     @Override
     public void render(@NotNull MapView mapView, @NotNull MapCanvas mapCanvas, @NotNull Player player) {
-        mapCanvas.setCursors(mapCursorCollection);
-        if(game.getMap().first().getImg() != null) mapCanvas.drawImage(0, 0, game.getMap().first().getImg());
+        if(first){
+            first = false;
+            if(game.getMap().first().getImg() != null) mapCanvas.drawImage(0, 0, game.getMap().first().getImg());
+            mapCanvas.setCursors(mapCursorCollection);
+        }
     }
     private void addCursors(List<Player> players){
         for(Player p : players){
@@ -33,15 +42,16 @@ public class MiniMapRenderer extends MapRenderer {
             mapCursorHashMap.put(p, cursor);
             this.mapCursorCollection.addCursor(cursor);
         }
+        bombCursorT = Pair.of(new MapCursor((byte) 0, (byte) 0, (byte) 0, MapCursor.Type.TEMPLE, false), null);
+        this.mapCursorCollection.addCursor(bombCursorT.left());
+        bombCursorAT = Pair.of(new MapCursor((byte) 0, (byte) 0, (byte) 0, MapCursor.Type.RED_X, false), null);
+        this.mapCursorCollection.addCursor(bombCursorAT.left());
     }
     public void updateCursors(){
-        Location corner = game.getPlace()[2];
-        int x = corner.getBlockX();
-        int y = corner.getBlockZ();
         for(Player p : mapCursorHashMap.keySet()){
             MapCursor cursor = mapCursorHashMap.get(p);
-            cursor.setX((byte) ((((p.getX()-x)/104)*128)-64));
-            cursor.setY((byte) ((((p.getZ()-y)/130)*128)-64));
+            cursor.setX((byte) ((((p.getX()-x)/game.getMap().first().getSize()[0])*256)-128));
+            cursor.setY((byte) ((((p.getZ()-y)/game.getMap().first().getSize()[1])*256)-128));
             float yaw = p.getYaw();
             if(yaw>=0){
                 cursor.setDirection((byte) ((p.getYaw()/360)*16));
@@ -49,5 +59,34 @@ public class MiniMapRenderer extends MapRenderer {
                 cursor.setDirection( (byte) ( ((p.getYaw()/360)*16)+16 ) );
             }
         }
+        updateTBomb();
+        updateATBomb();
+    }
+    private void updateTBomb(){
+        if(bombCursorT.right() == null){
+            bombCursorT.left().setVisible(false);
+            return;
+        }
+        bombCursorT.left().setVisible(true);
+        bombCursorT.left().setX((byte) ((((bombCursorT.right().getX()-x)/game.getMap().first().getSize()[0])*256)-128));
+        bombCursorT.left().setY((byte) ((((bombCursorT.right().getZ()-y)/game.getMap().first().getSize()[1])*256)-128));
+    }
+    private void updateATBomb(){
+        if(bombCursorAT.right() == null){
+            bombCursorAT.left().setVisible(false);
+            return;
+        }
+        bombCursorAT.left().setVisible(true);
+        bombCursorAT.left().setX((byte) ((((bombCursorAT.right().getX()-x)/game.getMap().first().getSize()[0])*256)-128));
+        bombCursorAT.left().setY((byte) ((((bombCursorAT.right().getZ()-y)/game.getMap().first().getSize()[1])*256)-128));
+    }
+    public void changeType(MapCursor.Type type, Player p){
+        mapCursorHashMap.get(p).setType(type);
+    }
+    public void changeBombT(Location loc){
+        bombCursorT = Pair.of(bombCursorT.first(), loc);
+    }
+    public void changeBombAT(Location loc){
+        bombCursorAT = Pair.of(bombCursorAT.first(), loc);
     }
 }
