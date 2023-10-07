@@ -5,6 +5,7 @@ import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Managers.MiniMapRenderer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -14,6 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import static feusalamander.cs_mo.CS_MO.main;
 @SuppressWarnings("deprecation")
@@ -37,6 +39,7 @@ public class GameTick extends BukkitRunnable {
     }
     private String time(){
         if(time>=60)return "1:"+(time-60);
+        if(time<0)return "0:00";
         return "0:"+time;
     }
     private void changeRound(){
@@ -45,23 +48,10 @@ public class GameTick extends BukkitRunnable {
             rest = false;
             game.giveShop(false);
         }else{
+            bombExplode();
             color = "§f";
-            for(Item item : game.getItems()){
-                item.remove();
-                game.bombDropped = null;
-                game.getRenderers().get(1).changeBombT(null);
-                game.getRenderers().get(0).changeBombAT(null);
-            }
             score();
-            time = 15;//15
-            if(game.getRound() == 12)game.changeSide();
-            game.addRound();
-            game.updateBar();
-            rest = true;
-            game.chooseSpawns();
-            game.giveShop(true);
-            for(Player p :game.getPlayers())p.setHealth(20);
-            bomb();
+            setRest();
         }
         if(game.getRound() > 24)end();
     }
@@ -71,11 +61,11 @@ public class GameTick extends BukkitRunnable {
     private void score(){
         if(!game.getBombPlanted().first()){
             game.addScore(0);
-            for(Player p : game.getPlayers())p.sendMessage("§9The CTs wins");
+            for(Player p : game.getPlayers())p.sendTitle("§9The CTs wins", "");
         }else {
             game.addScore(1);
             game.removeBomb();
-            for(Player p : game.getPlayers())p.sendMessage("§6The Ts wins");
+            for(Player p : game.getPlayers())p.sendTitle("§6The Ts wins", "");
         }
     }
     public void bomb(){
@@ -158,12 +148,39 @@ public class GameTick extends BukkitRunnable {
     }
     private void checkBomb(){
         if(game.getBombDropped() == null)return;
-        for(Entity entity: game.bombDropped.getNearbyEntities(15, 5, 15)){
-            if(entity instanceof Player p&&game.getCT().contains(p)){
+        for(Player p : game.bombDropped.getLocation().getNearbyPlayers(15, 5, 15)){
+            if(game.getCT().contains(p)){
                 game.getRenderers().get(0).changeBombAT(game.getBombDropped().getLocation());
                 return;
             }
         }
         game.getRenderers().get(0).changeBombAT(null);
+    }
+    private void setRest(){
+        Bukkit.getScheduler().runTaskLater(main, () -> {
+            for(Item item : game.getItems()){
+                item.remove();
+                game.bombDropped = null;
+                game.getRenderers().get(1).changeBombT(null);
+                game.getRenderers().get(0).changeBombAT(null);
+            }
+            time = 15;//15
+            if(game.getRound() == 12)game.changeSide();
+            game.addRound();
+            game.updateBar();
+            rest = true;
+            game.chooseSpawns();
+            game.giveShop(true);
+            for(Player p :game.getPlayers())p.setHealth(20);
+            bomb();
+        }, 140);
+    }
+    private void bombExplode(){
+        if(!game.getBombPlanted().left())return;
+        Location loc = game.getBombPlanted().right();
+        Objects.requireNonNull(Bukkit.getWorld("world")).spawnParticle(Particle.EXPLOSION_HUGE, loc, 5);
+        for(Player p : loc.getNearbyPlayers(60, 20, 60)){
+            p.damage((80/p.getLocation().distance(loc))*8);
+        }
     }
 }
