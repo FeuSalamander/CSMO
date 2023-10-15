@@ -22,7 +22,7 @@ public class Starting extends BukkitRunnable {
     @Override
     public void run() {
         if(players.size() != main.getConf().getMinPlayer())unload();
-        if(timer == 0){unload();start();return;}
+        if(timer == 0){start();unload();return;}
         for(Player p  : players){
             p.sendTitle(colors[timer-1]+"§l"+timer+"s", "");
             p.setLevel(timer);

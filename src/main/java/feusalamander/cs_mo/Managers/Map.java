@@ -33,10 +33,11 @@ public class Map {
         final ConfigurationSection section2 = section.getConfigurationSection("maps");
         assert section2 != null;
         for(String key : section2.getKeys(false)){
-            Location[] map = new Location[3];
+            Location[] map = new Location[4];
             map[0] = section2.getLocation(key+".spawns.AT");
             map[1] = section2.getLocation(key+".spawns.T");
             map[2] = section2.getLocation(key+".corner");
+            map[3] = section2.getLocation(key+".winScreen");
             schematics.add(Pair.of(true, map));
             size[0] = section2.getInt(key+".size.x");
             size[1] = section2.getInt(key+".size.y");

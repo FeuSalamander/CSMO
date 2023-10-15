@@ -35,13 +35,12 @@ public class Game implements Listener {
     private final int gameElo;
     private String mapName;
     private final List<Player> players;
-    private final List<Player> CT = new ArrayList<>();
-    private final List<Player> T = new ArrayList<>();
+    private final List<Player> CT = new ArrayList<>(5);
+    private final List<Player> T = new ArrayList<>(5);
     private final Location[] place;
-    private final List<Location> ctSpawns = new ArrayList<>();
-    private final List<Location> tSpawns = new ArrayList<>();
-    private final HashMap<Player, Integer> money = new HashMap<>();
-    private final HashMap<Player, int[]> stats = new HashMap<>();
+    private final List<Location> ctSpawns = new ArrayList<>(5);
+    private final List<Location> tSpawns = new ArrayList<>(5);
+    private final HashMap<Player, Pair<Integer, int[]>> moneyAndStats = new HashMap<>(10);
     private BossBar bar;
     private BossBar bar2;
     private final int[] score = new int[2];
@@ -56,7 +55,9 @@ public class Game implements Listener {
     private ItemStack miniMapCT;
     private ItemStack miniMapT;
     public Item bombDropped;
-    private final List<MiniMapRenderer> renderers = new ArrayList<>();
+    private final List<MiniMapRenderer> renderers = new ArrayList<>(2);
+    private final HashMap<UUID, Boolean> disconnected= new HashMap<>(10);
+    private final HashMap<Player, Player> specs = new HashMap<>();
     public Game(List<Player> players, int elo){
         this.players = players;
         this.gameElo = elo;
@@ -100,8 +101,7 @@ public class Game implements Listener {
             }else{
                 T.add(p);
             }
-            money.put(p, 800);
-            stats.put(p, new int[]{0, 0});
+            moneyAndStats.put(p, Pair.of(800, new int[]{0, 0}));
         }
         for(Player p : CT)p.sendMessage("§9Your are a CT");
         for(Player p : T)p.sendMessage("§6Your are a T");
@@ -115,14 +115,14 @@ public class Game implements Listener {
             double z = place[0].z()+(main.random.nextInt(6)-2.5);
             mainAT.setX(x);
             mainAT.setZ(z);
-            ctSpawns.add(mainAT);
+            ctSpawns.add(mainAT.clone());
         }
         for(int i = 0; i<size; i++){
             double x = place[1].x()+(main.random.nextInt(6)-2.5);
             double z = place[1].z()+(main.random.nextInt(6)-2.5);
             mainT.setX(x);
             mainT.setZ(z);
-            tSpawns.add(mainT);
+            tSpawns.add(mainT.clone());
         }
     }
     public void chooseSpawns(){
@@ -173,7 +173,7 @@ public class Game implements Listener {
             p.setScoreboard(sb);
             if(this.CT.contains(p))AT.addPlayer(p);
             if(this.T.contains(p))T.addPlayer(p);
-            Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+money.get(p)).setScore(2);
+            Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+moneyAndStats.get(p).left()).setScore(2);
         }
         bombV.setSuffix("Not planted");
         atV.setSuffix(String.valueOf(AT.getSize()));
@@ -188,6 +188,7 @@ public class Game implements Listener {
         for(Player p : T)bar2.addPlayer(p);
     }
     public void updateBar(){
+        if(round>24)return;
         if(round < 13){
             bar.setProgress((double) (round-1) /12);
             bar2.setProgress((double) (round-1) /12);
@@ -218,12 +219,6 @@ public class Game implements Listener {
             p.getInventory().setItem(1, new ItemStack(Material.FEATHER));
         }
     }
-    public void remove(Player p){
-        players.remove(p);
-        p.setScoreboard(main.getScoreboard());
-        bar.removePlayer(p);
-        bar2.removePlayer(p);
-    }
     public void changeSide(){
         int dump = score[0];
         score[0] = score[1];
@@ -237,6 +232,11 @@ public class Game implements Listener {
         bar2.removeAll();
         for(Player p : CT)bar.addPlayer(p);
         for(Player p : T)bar2.addPlayer(p);
+        renderers.get(0).changeSide(CT);
+        renderers.get(1).changeSide(T);
+        for(Player p : CT)p.getInventory().setItem(EquipmentSlot.OFF_HAND, miniMapCT);
+        for(Player p : T)p.getInventory().setItem(EquipmentSlot.OFF_HAND, miniMapT);
+        for(UUID p : disconnected.keySet())disconnected.replace(p, !disconnected.get(p));
     }
     public void giveShop(boolean give){
         if(give){
@@ -323,40 +323,79 @@ public class Game implements Listener {
     public GameTick getTick() {
         return tick;
     }
+    public HashMap<Player, Player> getSpecs() {
+        return specs;
+    }
     public List<MiniMapRenderer> getRenderers() {
         return renderers;
-    }
-    public HashMap<Player, int[]> getStats() {
-        return stats;
     }
     public int getGameElo() {
         return gameElo;
     }
-    public HashMap<Player, Integer> getMoney() {
-        return money;
+    public HashMap<Player, Pair<Integer, int[]>> getMoneyAndStats() {
+        return moneyAndStats;
     }
     public Pair<Map, Integer> getMap() {
         return map;
     }
-
     public Item getBombDropped() {
         return bombDropped;
     }
     public void removeMoney(Player p, int money){
-        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.money.get(p)).resetScore();
-        this.money.replace(p, money);
-        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.money.get(p)).setScore(2);
+        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p).left()).resetScore();
+        int[] stats = this.moneyAndStats.get(p).right();
+        this.moneyAndStats.replace(p, Pair.of(money, stats));
+        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p).left()).setScore(2);
     }
     public void removeBomb(){
         if(getBombPlanted().left())for(Entity entity : getBombPlanted().right().getNearbyEntities(0.5, 0.5, 0.5))if(entity instanceof ArmorStand)entity.remove();
         Objects.requireNonNull(getSb().getTeam("bombV")).setSuffix("Not Planted");
         setBombPlanted(false, null);
     }
+    public HashMap<UUID, Boolean> getDisconnected() {
+        return disconnected;
+    }
+
+    public void remove(Player p){
+        p.setScoreboard(main.getScoreboard());
+        bar.removePlayer(p);
+        bar2.removePlayer(p);
+        if(CT.contains(p)){
+            disconnected.put(p.getUniqueId(), true);
+            CT.remove(p);
+        }else {
+            disconnected.put(p.getUniqueId(), false);
+            T.remove(p);
+        }
+        players.remove(p);
+    }
+    public void reconnect(Player p){
+        main.getNone().remove(p);
+        players.add(p);
+        if(disconnected.get(p.getUniqueId())){
+            CT.add(p);
+            bar.addPlayer(p);
+        }else {
+            T.add(p);
+            bar2.addPlayer(p);
+        }
+        disconnected.remove(p.getUniqueId());
+        p.setScoreboard(sb);
+        main.addToSpec(p, this);
+    }
     @EventHandler
     private void onMove(PlayerMoveEvent e){
         if(!players.contains(e.getPlayer()))return;
         if(!e.hasExplicitlyChangedPosition())return;
         if(tick.isRest()){e.setCancelled(true);return;}
+        if(getSpecs().containsKey(e.getPlayer())){e.setCancelled(true);return;}
+        if(getSpecs().containsValue(e.getPlayer())){
+            for(Player p : getSpecs().keySet()){
+                if(getSpecs().get(p).equals(e.getPlayer())){
+                    p.teleport(e.getPlayer());
+                }
+            }
+        }
         if(!getT().contains(e.getPlayer()))return;
         if(!e.getPlayer().getItemInHand().getType().equals(Material.NETHER_STAR))return;
         if(e.getPlayer().getLocation().getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.BEDROCK))e.setCancelled(true);

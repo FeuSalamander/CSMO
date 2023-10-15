@@ -6,16 +6,13 @@ import feusalamander.cs_mo.Managers.MiniMapRenderer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
 import org.bukkit.map.MapCursor;
 import org.bukkit.scheduler.BukkitRunnable;
 
-
-import java.util.Arrays;
 import java.util.Objects;
+import java.util.UUID;
 
 import static feusalamander.cs_mo.CS_MO.main;
 @SuppressWarnings("deprecation")
@@ -92,18 +89,17 @@ public class GameTick extends BukkitRunnable {
             won = "none";
         }
         for(Player p : game.getPlayers()){
-            p.teleport(main.getConf().getSpawn());
             setWins(p, won);
             p.getInventory().clear();
             p.setScoreboard(main.getScoreboard());
-            main.getNone().add(p);
             game.getBar().removePlayer(p);
             game.getBar2().removePlayer(p);
+            main.getNone().add(p);
         }
+        for(UUID p : game.getDisconnected().keySet())main.getPlayerData().addElo(p, -10);
+        game.getDisconnected().clear();
         main.getPlayerData().save();
-        game.getMap().first().setPair(true, game.getMap().right());
-        main.getGames().remove(game);
-        HandlerList.unregisterAll(game);
+        new WinScreen(game, won).runTaskTimer(main, 0, 100);
         cancel();
     }
     private void setWins(Player p, String won){
@@ -135,7 +131,7 @@ public class GameTick extends BukkitRunnable {
         int actualOutcome = won ? 1 : 0;
         int pElo = main.getPlayerData().getElo(p.getUniqueId());
         int gameElo = game.getGameElo();
-        int[] rankArray = game.getStats().get(p);
+        int[] rankArray = game.getMoneyAndStats().get(p).right();
         float rank = (float) ((rankArray[0]+1)/(rankArray[1]+1))*5;
         int finalElo = (int) ((actualOutcome - 1.0 / (1.0 + Math.pow(10, (gameElo - pElo) / 400.0))) + rank);
         if(pElo+finalElo<0)return -pElo;
@@ -173,7 +169,7 @@ public class GameTick extends BukkitRunnable {
             game.giveShop(true);
             for(Player p :game.getPlayers())p.setHealth(20);
             bomb();
-        }, 140);
+        }, 140);//140
     }
     private void bombExplode(){
         if(!game.getBombPlanted().left())return;

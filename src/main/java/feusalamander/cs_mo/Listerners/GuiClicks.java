@@ -63,6 +63,7 @@ public class GuiClicks implements Listener {
     }
     private void clickPlay(Player p){
         if(p.getInventory().getItem(8) != null){p.sendMessage("§cYour are already in a queue");return;}
+        if(!main.getNone().contains(p)){p.sendMessage("§cYou can't do that");return;}
         int[] gameElo = whatElo(p);
         int playerElo = main.getPlayerData().getElo(p.getUniqueId());
         int finalElo = playerElo;

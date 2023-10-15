@@ -55,4 +55,12 @@ public final class GuiTool {
         item.setItemMeta(meta);
         return item;
     }
+    public static ItemStack getSkull(String name, Player p){
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) item.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setOwningPlayer(p);
+        item.setItemMeta(meta);
+        return item;
+    }
 }

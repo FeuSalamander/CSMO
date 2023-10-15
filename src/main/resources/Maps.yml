@@ -31,3 +31,11 @@ dust2:
       size:
         x: 104
         y: 130
+      winScreen:
+        ==: org.bukkit.Location
+        world: world
+        x: -268
+        y: 103
+        z: 135
+        pitch: 0.0
+        yaw: 180.0 #you need to keep this pitch, the players needs to face the north

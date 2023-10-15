@@ -33,7 +33,7 @@ public final class AtBuyMenu {
         int price = weapon.price;
         for(Game game : main.getGames()){
             if(game.getPlayers().contains(p)){
-                int money = game.getMoney().get(p);
+                int money = game.getMoneyAndStats().get(p).first();
                 if(money>=price){
                     game.removeMoney(p, price);
                     p.sendMessage("§aYou bought the "+weapon.name+" for §6"+price+"$");

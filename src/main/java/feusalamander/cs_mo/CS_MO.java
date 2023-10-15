@@ -4,7 +4,6 @@ import feusalamander.cs_mo.Commands.Command;
 import feusalamander.cs_mo.Commands.Completer;
 import feusalamander.cs_mo.Gui.AtBuyMenu;
 import feusalamander.cs_mo.Gui.TBuyMenu;
-import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Gui.PlayGui;
 import feusalamander.cs_mo.Listerners.GuiClicks;
 import feusalamander.cs_mo.Listerners.onJoin;
@@ -15,22 +14,19 @@ import feusalamander.cs_mo.Managers.Map;
 import feusalamander.cs_mo.Configs.MapConfig;
 import feusalamander.cs_mo.Managers.PlayerData;
 import feusalamander.cs_mo.Runnables.Starting;
-import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.*;
-
+@SuppressWarnings("deprecation")
 public final class CS_MO extends JavaPlugin {
     public static CS_MO main;
     private PlayGui playgui;
@@ -68,6 +64,7 @@ public final class CS_MO extends JavaPlugin {
             game.getBar().removeAll();
             game.getBar2().removeAll();
             for(Item item : game.getItems())item.remove();
+            for(Player p : game.getSpecs().keySet())removeFromSpec(p, game);
             if(game.getBombPlanted().left())for(Entity entity : game.getBombPlanted().right().getNearbyEntities(0.1, 0.1, 0.1))if(entity instanceof ArmorStand){entity.remove();return;}
         }
         for(Player p : getServer().getOnlinePlayers()){
@@ -94,6 +91,36 @@ public final class CS_MO extends JavaPlugin {
             final Map floor = new Map(id);
             this.maps.add(floor);
         }
+    }
+    public void addToSpec(Player p, Game game){
+        Player p2 = null;
+        int crash = 0;
+        while(p2 == null||p2 == p){
+            if(crash >4)break;
+            if(game.getCT().contains(p)){
+                p2 = game.getCT().get(main.random.nextInt(game.getCT().size()));
+            }else {
+                p2 = game.getT().get(main.random.nextInt(game.getT().size()));
+            }
+            crash++;
+        }
+        game.getSpecs().put(p, p2);
+        p.setInvulnerable(true);
+        p.setInvisible(true);
+        p.setAllowFlight(true);
+        p.setFlying(true);
+        for(Player all : Bukkit.getOnlinePlayers())all.hidePlayer(p);
+        assert p2 != null;
+        p.hidePlayer(p2);
+        p.sendTitle("§cYou are spectating "+p2.getName(), "");
+    }
+    public void removeFromSpec(Player p, Game game){
+        p.setInvisible(false);
+        p.setInvulnerable(false);
+        p.showPlayer(game.getSpecs().get(p));
+        game.getSpecs().remove(p);
+        p.setAllowFlight(false);
+        for(Player all : Bukkit.getOnlinePlayers())all.showPlayer(p);
     }
     public Inventory getPlayGui() {
         return playgui.getMenu();

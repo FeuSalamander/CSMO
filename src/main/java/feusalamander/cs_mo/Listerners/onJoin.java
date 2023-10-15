@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -21,17 +20,23 @@ public class onJoin implements Listener {
     @EventHandler
     private void onJoinn(PlayerJoinEvent e){
         e.getPlayer().setGameMode(GameMode.ADVENTURE);
+        e.getPlayer().setHealth(20);
         main.getNone().add(e.getPlayer());
         if(!main.getPlayerData().hasJoined(e.getPlayer().getUniqueId()))main.getPlayerData().createUuid(e.getPlayer().getUniqueId());
+        for(Game game : main.getGames()){
+            if(game.getDisconnected().containsKey(e.getPlayer().getUniqueId())){
+                game.reconnect(e.getPlayer());
+            }
+        }
     }
     @EventHandler
     private void onLeave(PlayerQuitEvent e){
         Player p = e.getPlayer();
         p.getInventory().clear();
         main.getPlayerData().save();
-        main.getNone().remove(p);
         main.removeQueue(p);
-        for(Game game : main.getGames())if(game.getPlayers().contains(p))game.remove(p);
+        if(!main.getNone().contains(p)) for(Game game : main.getGames())if(game.getPlayers().contains(p)){game.remove(p);main.getNone().remove(p);return;}
+        main.getNone().remove(p);
     }
     @EventHandler
     private void onHit(EntityDamageByEntityEvent e){

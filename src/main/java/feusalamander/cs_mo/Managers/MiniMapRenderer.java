@@ -89,4 +89,9 @@ public class MiniMapRenderer extends MapRenderer {
     public void changeBombAT(Location loc){
         bombCursorAT = Pair.of(bombCursorAT.first(), loc);
     }
+    public void changeSide(List<Player> players){
+        for(int i = 0; i<mapCursorCollection.size(); i++)mapCursorCollection.removeCursor(mapCursorCollection.getCursor(i));
+        mapCursorHashMap.clear();
+        addCursors(players);
+    }
 }
