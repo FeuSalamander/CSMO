@@ -64,7 +64,7 @@ public final class CS_MO extends JavaPlugin {
             game.getBar().removeAll();
             game.getBar2().removeAll();
             for(Item item : game.getItems())item.remove();
-            for(Player p : game.getSpecs().keySet())removeFromSpec(p, game);
+            for(String p : game.getSpecs().keySet())removeFromSpec(p, game);
             if(game.getBombPlanted().left())for(Entity entity : game.getBombPlanted().right().getNearbyEntities(0.1, 0.1, 0.1))if(entity instanceof ArmorStand){entity.remove();return;}
         }
         for(Player p : getServer().getOnlinePlayers()){
@@ -104,21 +104,24 @@ public final class CS_MO extends JavaPlugin {
             }
             crash++;
         }
-        game.getSpecs().put(p, p2);
+        game.getSpecs().put(p.getName(), p2);
         p.setInvulnerable(true);
         p.setInvisible(true);
         p.setAllowFlight(true);
         p.setFlying(true);
+        p.getInventory().clear();
         for(Player all : Bukkit.getOnlinePlayers())all.hidePlayer(p);
         assert p2 != null;
         p.hidePlayer(p2);
         p.sendTitle("§cYou are spectating "+p2.getName(), "");
+        p.teleport(p2);
     }
-    public void removeFromSpec(Player p, Game game){
+    public void removeFromSpec(String p2, Game game){
+        Player p = Bukkit.getPlayer(p2);
+        assert p != null;
         p.setInvisible(false);
         p.setInvulnerable(false);
-        p.showPlayer(game.getSpecs().get(p));
-        game.getSpecs().remove(p);
+        p.showPlayer(game.getSpecs().get(p.getName()));
         p.setAllowFlight(false);
         for(Player all : Bukkit.getOnlinePlayers())all.showPlayer(p);
     }

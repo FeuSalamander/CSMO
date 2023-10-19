@@ -40,7 +40,7 @@ public class Game implements Listener {
     private final Location[] place;
     private final List<Location> ctSpawns = new ArrayList<>(5);
     private final List<Location> tSpawns = new ArrayList<>(5);
-    private final HashMap<Player, Pair<Integer, int[]>> moneyAndStats = new HashMap<>(10);
+    private final HashMap<String, Pair<Integer, int[]>> moneyAndStats = new HashMap<>(10);
     private BossBar bar;
     private BossBar bar2;
     private final int[] score = new int[2];
@@ -52,12 +52,12 @@ public class Game implements Listener {
     public boolean planting;
     public boolean defusing;
     private Pair<Map, Integer> map;
-    private ItemStack miniMapCT;
-    private ItemStack miniMapT;
-    public Item bombDropped;
+    public ItemStack miniMapCT;
+    public ItemStack miniMapT;
+    public Pair<Item, Player> bombDropped;
     private final List<MiniMapRenderer> renderers = new ArrayList<>(2);
     private final HashMap<UUID, Boolean> disconnected= new HashMap<>(10);
-    private final HashMap<Player, Player> specs = new HashMap<>();
+    private final HashMap<String, Player> specs = new HashMap<>();
     public Game(List<Player> players, int elo){
         this.players = players;
         this.gameElo = elo;
@@ -101,7 +101,7 @@ public class Game implements Listener {
             }else{
                 T.add(p);
             }
-            moneyAndStats.put(p, Pair.of(800, new int[]{0, 0}));
+            moneyAndStats.put(p.getName(), Pair.of(800, new int[]{0, 0}));
         }
         for(Player p : CT)p.sendMessage("§9Your are a CT");
         for(Player p : T)p.sendMessage("§6Your are a T");
@@ -173,7 +173,7 @@ public class Game implements Listener {
             p.setScoreboard(sb);
             if(this.CT.contains(p))AT.addPlayer(p);
             if(this.T.contains(p))T.addPlayer(p);
-            Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+moneyAndStats.get(p).left()).setScore(2);
+            Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+moneyAndStats.get(p.getName()).left()).setScore(2);
         }
         bombV.setSuffix("Not planted");
         atV.setSuffix(String.valueOf(AT.getSize()));
@@ -200,7 +200,7 @@ public class Game implements Listener {
     private void start(){
         tick = new GameTick(this);
         tick.runTaskTimer(main, 0, 20);
-        Inventory();
+        for(Player p : players)Inventory(p);
         giveShop(true);
         tick.bomb();
         for(Player p : CT){
@@ -212,12 +212,10 @@ public class Game implements Listener {
             p.getInventory().setItem(8, GuiTool.pane);
         }
     }
-    private void Inventory(){
-        for(Player p : players){
-            for(int i = 0; i<36; i++)p.getInventory().setItem(i, GuiTool.pane);
-            p.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
-            p.getInventory().setItem(1, new ItemStack(Material.FEATHER));
-        }
+    public void Inventory(Player p){
+        for(int i = 0; i<36; i++)p.getInventory().setItem(i, GuiTool.pane);
+        p.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
+        p.getInventory().setItem(1, new ItemStack(Material.FEATHER));
     }
     public void changeSide(){
         int dump = score[0];
@@ -320,10 +318,15 @@ public class Game implements Listener {
     public Location[] getPlace() {
         return place;
     }
+
+    public void setBombDropped(Pair<Item, Player> bombDropped) {
+        this.bombDropped = bombDropped;
+    }
+
     public GameTick getTick() {
         return tick;
     }
-    public HashMap<Player, Player> getSpecs() {
+    public HashMap<String, Player> getSpecs() {
         return specs;
     }
     public List<MiniMapRenderer> getRenderers() {
@@ -332,20 +335,20 @@ public class Game implements Listener {
     public int getGameElo() {
         return gameElo;
     }
-    public HashMap<Player, Pair<Integer, int[]>> getMoneyAndStats() {
+    public HashMap<String, Pair<Integer, int[]>> getMoneyAndStats() {
         return moneyAndStats;
     }
     public Pair<Map, Integer> getMap() {
         return map;
     }
-    public Item getBombDropped() {
+    public Pair<Item, Player> getBombDropped() {
         return bombDropped;
     }
     public void removeMoney(Player p, int money){
-        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p).left()).resetScore();
-        int[] stats = this.moneyAndStats.get(p).right();
-        this.moneyAndStats.replace(p, Pair.of(money, stats));
-        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p).left()).setScore(2);
+        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p.getName()).left()).resetScore();
+        int[] stats = this.moneyAndStats.get(p.getName()).right();
+        this.moneyAndStats.replace(p.getName(), Pair.of(money, stats));
+        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p.getName()).left()).setScore(2);
     }
     public void removeBomb(){
         if(getBombPlanted().left())for(Entity entity : getBombPlanted().right().getNearbyEntities(0.5, 0.5, 0.5))if(entity instanceof ArmorStand)entity.remove();
@@ -356,7 +359,7 @@ public class Game implements Listener {
         return disconnected;
     }
 
-    public void remove(Player p){
+    public void remove(Player p, Location loc, boolean bomb){
         p.setScoreboard(main.getScoreboard());
         bar.removePlayer(p);
         bar2.removePlayer(p);
@@ -366,6 +369,8 @@ public class Game implements Listener {
         }else {
             disconnected.put(p.getUniqueId(), false);
             T.remove(p);
+            if(bomb)loc.getWorld().dropItem(loc, GuiTool.bomb);
+            renderers.get(1).changeType(MapCursor.Type.GREEN_POINTER, p);
         }
         players.remove(p);
     }
@@ -388,11 +393,11 @@ public class Game implements Listener {
         if(!players.contains(e.getPlayer()))return;
         if(!e.hasExplicitlyChangedPosition())return;
         if(tick.isRest()){e.setCancelled(true);return;}
-        if(getSpecs().containsKey(e.getPlayer())){e.setCancelled(true);return;}
+        if(getSpecs().containsKey(e.getPlayer().getName())){e.setCancelled(true);return;}
         if(getSpecs().containsValue(e.getPlayer())){
-            for(Player p : getSpecs().keySet()){
+            for(String p : getSpecs().keySet()){
                 if(getSpecs().get(p).equals(e.getPlayer())){
-                    p.teleport(e.getPlayer());
+                    Objects.requireNonNull(Bukkit.getPlayer(p)).teleport(e.getPlayer());
                 }
             }
         }
@@ -422,7 +427,7 @@ public class Game implements Listener {
             e.getItem().remove();
             getRenderers().get(1).changeType(MapCursor.Type.MANSION, e.getPlayer());
             getRenderers().get(1).changeBombT(null);
-            bombDropped = null;
+            bombDropped = Pair.of(null, e.getPlayer());
             getRenderers().get(0).changeBombAT(null);
         }
     }
@@ -440,7 +445,7 @@ public class Game implements Listener {
         if(item.getType().equals(Material.NETHER_STAR)){
             getRenderers().get(1).changeType(MapCursor.Type.GREEN_POINTER, e.getPlayer());
             getRenderers().get(1).changeBombT(e.getItemDrop().getLocation());
-            bombDropped = e.getItemDrop();
+            bombDropped = Pair.of(e.getItemDrop(), null);
         }
     }
 }

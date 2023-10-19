@@ -1,6 +1,7 @@
 package feusalamander.cs_mo.Managers;
 
 import it.unimi.dsi.fastutil.Pair;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.map.*;
@@ -12,7 +13,7 @@ import java.util.List;
 public class MiniMapRenderer extends MapRenderer {
     private final Game game;
     private final MapCursorCollection mapCursorCollection;
-    private final HashMap<Player, MapCursor> mapCursorHashMap = new HashMap<>();
+    private final HashMap<String, MapCursor> mapCursorHashMap = new HashMap<>();
     private final int x;
     private final int y;
     private boolean first = true;
@@ -39,7 +40,7 @@ public class MiniMapRenderer extends MapRenderer {
     private void addCursors(List<Player> players){
         for(Player p : players){
             MapCursor cursor = new MapCursor((byte) 0, (byte) 0, (byte) 0, MapCursor.Type.GREEN_POINTER, true);
-            mapCursorHashMap.put(p, cursor);
+            mapCursorHashMap.put(p.getName(), cursor);
             this.mapCursorCollection.addCursor(cursor);
         }
         bombCursorT = Pair.of(new MapCursor((byte) 0, (byte) 0, (byte) 0, MapCursor.Type.TEMPLE, false), null);
@@ -48,15 +49,23 @@ public class MiniMapRenderer extends MapRenderer {
         this.mapCursorCollection.addCursor(bombCursorAT.left());
     }
     public void updateCursors(){
-        for(Player p : mapCursorHashMap.keySet()){
-            MapCursor cursor = mapCursorHashMap.get(p);
-            cursor.setX((byte) ((((p.getX()-x)/game.getMap().first().getSize()[0])*256)-128));
-            cursor.setY((byte) ((((p.getZ()-y)/game.getMap().first().getSize()[1])*256)-128));
-            float yaw = p.getYaw();
-            if(yaw>=0){
-                cursor.setDirection((byte) ((p.getYaw()/360)*16));
-            }else{
-                cursor.setDirection( (byte) ( ((p.getYaw()/360)*16)+16 ) );
+        for(String name : mapCursorHashMap.keySet()){
+            Player p = Bukkit.getPlayer(name);
+            if(p != null&&p.isOnline()){
+                MapCursor cursor = mapCursorHashMap.get(name);
+                if(!game.getSpecs().containsKey(p.getName())){
+                    if(!cursor.isVisible())cursor.setVisible(true);
+                }else{
+                    cursor.setVisible(false);
+                }
+                cursor.setX((byte) ((((p.getX()-x)/game.getMap().first().getSize()[0])*256)-128));
+                cursor.setY((byte) ((((p.getZ()-y)/game.getMap().first().getSize()[1])*256)-128));
+                float yaw = p.getYaw();
+                if(yaw>=0){
+                    cursor.setDirection((byte) ((p.getYaw()/360)*16));
+                }else{
+                    cursor.setDirection( (byte) ( ((p.getYaw()/360)*16)+16 ) );
+                }
             }
         }
         updateTBomb();
@@ -81,7 +90,9 @@ public class MiniMapRenderer extends MapRenderer {
         bombCursorAT.left().setY((byte) ((((bombCursorAT.right().getZ()-y)/game.getMap().first().getSize()[1])*256)-128));
     }
     public void changeType(MapCursor.Type type, Player p){
-        mapCursorHashMap.get(p).setType(type);
+        MapCursor cursor = mapCursorHashMap.get(p.getName());
+        if(cursor != null)cursor.setType(type);
+
     }
     public void changeBombT(Location loc){
         bombCursorT = Pair.of(bombCursorT.first(), loc);

@@ -1,7 +1,6 @@
 package feusalamander.cs_mo.Listerners;
 
 import feusalamander.cs_mo.Managers.Game;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,6 +21,7 @@ public class onJoin implements Listener {
         e.getPlayer().setGameMode(GameMode.ADVENTURE);
         e.getPlayer().setHealth(20);
         main.getNone().add(e.getPlayer());
+        e.getPlayer().teleport(main.getConf().getSpawn());
         if(!main.getPlayerData().hasJoined(e.getPlayer().getUniqueId()))main.getPlayerData().createUuid(e.getPlayer().getUniqueId());
         for(Game game : main.getGames()){
             if(game.getDisconnected().containsKey(e.getPlayer().getUniqueId())){
@@ -35,7 +35,7 @@ public class onJoin implements Listener {
         p.getInventory().clear();
         main.getPlayerData().save();
         main.removeQueue(p);
-        if(!main.getNone().contains(p)) for(Game game : main.getGames())if(game.getPlayers().contains(p)){game.remove(p);main.getNone().remove(p);return;}
+        if(!main.getNone().contains(p)) for(Game game : main.getGames())if(game.getPlayers().contains(p)){game.remove(p, p.getLocation(), game.getBombDropped().right().equals(p));main.getNone().remove(p);return;}
         main.getNone().remove(p);
     }
     @EventHandler

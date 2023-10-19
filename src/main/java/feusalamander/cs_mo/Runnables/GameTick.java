@@ -3,11 +3,13 @@ package feusalamander.cs_mo.Runnables;
 import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Managers.MiniMapRenderer;
+import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.map.MapCursor;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -66,8 +68,16 @@ public class GameTick extends BukkitRunnable {
         }
     }
     public void bomb(){
-        Player p = game.getT().get(main.random.nextInt(game.getT().size()));
+        Player p = null;
+        int crash = 0;
+        while(p == null||!p.isOnline()||p.isInvisible()){
+            if(crash >4)break;
+            p = game.getT().get(main.random.nextInt(game.getT().size()));
+            crash++;
+        }
+        assert p != null;
         p.getInventory().setItem(7, GuiTool.bomb);
+        game.setBombDropped(Pair.of(null, p));
         game.getRenderers().get(1).changeType(MapCursor.Type.MANSION, p);
     }
     public void plant(){
@@ -131,7 +141,7 @@ public class GameTick extends BukkitRunnable {
         int actualOutcome = won ? 1 : 0;
         int pElo = main.getPlayerData().getElo(p.getUniqueId());
         int gameElo = game.getGameElo();
-        int[] rankArray = game.getMoneyAndStats().get(p).right();
+        int[] rankArray = game.getMoneyAndStats().get(p.getName()).right();
         float rank = (float) ((rankArray[0]+1)/(rankArray[1]+1))*5;
         int finalElo = (int) ((actualOutcome - 1.0 / (1.0 + Math.pow(10, (gameElo - pElo) / 400.0))) + rank);
         if(pElo+finalElo<0)return -pElo;
@@ -143,10 +153,10 @@ public class GameTick extends BukkitRunnable {
         }
     }
     private void checkBomb(){
-        if(game.getBombDropped() == null)return;
-        for(Player p : game.bombDropped.getLocation().getNearbyPlayers(15, 5, 15)){
+        if(game.getBombDropped().left() == null)return;
+        for(Player p : game.bombDropped.left().getLocation().getNearbyPlayers(15, 5, 15)){
             if(game.getCT().contains(p)){
-                game.getRenderers().get(0).changeBombAT(game.getBombDropped().getLocation());
+                game.getRenderers().get(0).changeBombAT(game.getBombDropped().left().getLocation());
                 return;
             }
         }
@@ -165,11 +175,27 @@ public class GameTick extends BukkitRunnable {
             game.addRound();
             game.updateBar();
             rest = true;
+            rejoin();
             game.chooseSpawns();
             game.giveShop(true);
             for(Player p :game.getPlayers())p.setHealth(20);
             bomb();
         }, 140);//140
+    }
+    private void rejoin(){
+        for(String p2 : game.getSpecs().keySet()){
+            Player p = Bukkit.getPlayer(p2);
+            if(game.getCT().contains(p)){
+                assert p != null;
+                p.getInventory().setItem(EquipmentSlot.OFF_HAND, game.miniMapCT);
+            }else {
+                assert p != null;
+                p.getInventory().setItem(EquipmentSlot.OFF_HAND, game.miniMapT);
+            }
+            main.removeFromSpec(p2, game);
+            game.Inventory(p);
+        }
+        game.getSpecs().clear();
     }
     private void bombExplode(){
         if(!game.getBombPlanted().left())return;
