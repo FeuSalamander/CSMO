@@ -1,5 +1,10 @@
 mysql:
   enabled: false
+  host: "localhost"
+  user: "root"
+  pass: "admin"
+  dbName: "csmo"
+  port: 3306
 matchmaking: 10 #if players have + or - this elo they wil be able to match together
 minPlayers: 2
 spawn:

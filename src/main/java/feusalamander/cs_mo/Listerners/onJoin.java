@@ -33,7 +33,7 @@ public class onJoin implements Listener {
     private void onLeave(PlayerQuitEvent e){
         Player p = e.getPlayer();
         p.getInventory().clear();
-        main.getPlayerData().save();
+        if(!main.getConf().isMysql())main.getPlayerData().save();
         main.removeQueue(p);
         if(!main.getNone().contains(p)) for(Game game : main.getGames())if(game.getPlayers().contains(p)){game.remove(p, p.getLocation(), game.getBombDropped().right().equals(p));main.getNone().remove(p);return;}
         main.getNone().remove(p);

@@ -8,6 +8,7 @@ import feusalamander.cs_mo.Gui.PlayGui;
 import feusalamander.cs_mo.Listerners.GuiClicks;
 import feusalamander.cs_mo.Listerners.onJoin;
 import feusalamander.cs_mo.Managers.Game;
+import feusalamander.cs_mo.Managers.MySQL;
 import feusalamander.cs_mo.Runnables.ActionBarTick;
 import feusalamander.cs_mo.Configs.Config;
 import feusalamander.cs_mo.Managers.Map;
@@ -31,6 +32,7 @@ public final class CS_MO extends JavaPlugin {
     public static CS_MO main;
     private PlayGui playgui;
     private Config config;
+    private MySQL mySQL;
     private PlayerData playerData;
     private ActionBarTick actionBarTick;
     private final List<Map> maps = new ArrayList<>();
@@ -58,7 +60,7 @@ public final class CS_MO extends JavaPlugin {
     }
     @Override
     public void onDisable() {
-        playerData.save();
+        if(!config.isMysql()) playerData.save();
         getLogger().info("CS:MO by FeuSalamander is unloaded");
         for(Game game : games){
             game.getBar().removeAll();
@@ -71,11 +73,16 @@ public final class CS_MO extends JavaPlugin {
             p.getInventory().clear();
             p.setScoreboard(getScoreboard());
         }
+        if(config.isMysql()) mySQL.close();
     }
     private void loadClasses(){
         this.config = new Config(this.getConfig());
         this.playgui = new PlayGui();
-        this.playerData = new PlayerData();
+        if(config.isMysql()){
+            this.mySQL = new MySQL();
+        }else{
+            this.playerData = new PlayerData();
+        }
         this.actionBarTick = new ActionBarTick();
         actionBarTick.runTaskTimerAsynchronously(this, 0, 40);
         mapConf = new MapConfig();
@@ -167,5 +174,8 @@ public final class CS_MO extends JavaPlugin {
     }
     public Scoreboard getScoreboard(){
         return scoreboard;
+    }
+    public MySQL getMySQL() {
+        return mySQL;
     }
 }
