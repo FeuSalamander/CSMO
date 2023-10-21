@@ -2,12 +2,20 @@ package feusalamander.cs_mo.Managers;
 
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.UUID;
+import java.util.*;
+import java.util.Map;
 
 import static feusalamander.cs_mo.CS_MO.main;
 
@@ -29,6 +37,8 @@ public class Data {
             while(resultSet.left().next()){
                 raw2 = resultSet.left().getInt(raw);
             }
+            resultSet.left().close();
+            resultSet.right().close();
             return raw2;
         } catch (SQLException e) {
             main.getLogger().info(e.toString());
@@ -110,10 +120,75 @@ public class Data {
             main.getPlayerData().addLooses(uuid, i);
         }
     }
-    public static void importC(){
+    public static void importC(CommandSender sender){
+        if(main.getConf().isMysql()){
+            File f = new File(main.getDataFolder(), "PlayerData.yml");
+            if(!f.exists()){sender.sendMessage("§cYou can't import because there is no PlayerData.yml");return;}
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
 
+            List<HashMap<String, Object>> list = new ArrayList<>();
+            Set<String> keyset = config.getKeys(false);
+            for(String uuid : keyset){
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("uuid", uuid);
+                for(String key : Objects.requireNonNull(config.getConfigurationSection(uuid)).getKeys(false)){
+                    map.put(key, config.get(uuid+"."+key));
+                }
+                list.add(map);
+            }
+            main.getMySQL().importC(list);
+            sender.sendMessage("§aThe yml data has been imported");
+        }else {
+            sender.sendMessage("§cYou can't import because mySQL is not enabled");
+        }
     }
-    public static void export(){
+    public static void export(CommandSender sender){
+        if(main.getConf().isMysql()){
+            int k = 1;
+            File f = new File(main.getDataFolder(), "PlayerData Export.yml");
+            while(f.exists()){
+                f = new File(main.getDataFolder(), "PlayerData Export "+k+".yml");
+                k++;
+            }
 
+            try {
+                boolean b = f.createNewFile();
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
+                Pair<ResultSet, PreparedStatement> resultSet = main.getMySQL().export();
+                List<HashMap<String, Object>> data = new ArrayList<>();
+
+                while (resultSet.left().next()) {
+                    HashMap<String, Object> row = new LinkedHashMap<>();
+
+                    for (int i = 1; i <= resultSet.left().getMetaData().getColumnCount(); i++) {
+                        String columnName = resultSet.left().getMetaData().getColumnName(i);
+                        Object value = resultSet.left().getObject(i);
+                        row.put(columnName, value);
+                    }
+                    data.add(row);
+                }
+
+                for (Map<String, Object> map : data) {
+                    String uuid = (String) map.get("uuid");
+                    for (Map.Entry<String, Object> entry : map.entrySet()) {
+                        String key = entry.getKey();
+                        Object value = entry.getValue();
+
+                        if (!key.equals("uuid")) {
+                            config.set(uuid + "." + key, value);
+                        }
+                    }
+                }
+
+                config.save(f);
+                resultSet.left().close();
+                resultSet.right().close();
+                sender.sendMessage("§aThe mySQL data has been exported");
+            } catch (SQLException | IOException e) {
+                main.getLogger().info(e.toString());
+            }
+        }else{
+            sender.sendMessage("§cYou can't export because mySQL is not enabled");
+        }
     }
 }

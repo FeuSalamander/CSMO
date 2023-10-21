@@ -15,6 +15,7 @@ import static feusalamander.cs_mo.CS_MO.main;
 
 @SuppressWarnings("deprecation")
 public class Command implements CommandExecutor {
+    private CommandSender sender = null;
     CS_MO main = CS_MO.main;
     @Override
     public boolean onCommand(@NotNull CommandSender sender, org.bukkit.command.@NotNull Command command, @NotNull String s, @NotNull String[] args) {
@@ -46,10 +47,13 @@ public class Command implements CommandExecutor {
             }
         }
         if(sender.isOp()&&args[0].equalsIgnoreCase("import")){
-            
+            sender.sendMessage("§dAre you sure you wand to do this, this will erase the mySQL data, you have 3 seconds to retype the command to proceed");
+            if(this.sender == sender)Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.importC(sender));
+            this.sender = sender;
+            Bukkit.getScheduler().runTaskLater(main, () -> this.sender = null, 60);
         }
         if(sender.isOp()&&args[0].equalsIgnoreCase("export")){
-
+            Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.export(sender));
         }
         return false;
     }
