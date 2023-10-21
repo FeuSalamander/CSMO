@@ -3,8 +3,10 @@ package feusalamander.cs_mo.Listerners;
 import feusalamander.cs_mo.Gui.AtBuyMenu;
 import feusalamander.cs_mo.Gui.GuiTool;
 import feusalamander.cs_mo.Gui.TBuyMenu;
+import feusalamander.cs_mo.Managers.Data;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Runnables.Starting;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -64,25 +66,26 @@ public class GuiClicks implements Listener {
     private void clickPlay(Player p){
         if(p.getInventory().getItem(8) != null){p.sendMessage("§cYour are already in a queue");return;}
         if(!main.getNone().contains(p)){p.sendMessage("§cYou can't do that");return;}
-        int[] gameElo = whatElo(p);
-        int playerElo = main.getPlayerData().getElo(p.getUniqueId());
-        int finalElo = playerElo;
-        if(gameElo.length == 1){
-            HashMap<Player, Integer> map = new HashMap<>();
-            map.put(p, finalElo);
-            main.getQueue().add(map);
-        }else{
-            HashMap<Player, Integer> map = main.getQueue().get(gameElo[1]);
-            map.put(p, playerElo);
-            finalElo = gameElo[0];
-            if(map.size() == main.getConf().getMinPlayer())starting(new ArrayList<>(map.keySet()), finalElo);
-        }
-        p.sendMessage("§dYour are queued to Ranked CS:MO with "+finalElo+" elo");
-        main.getActionBarTick().broke = false;
-        p.getInventory().setItem(8, barrier);
+        Bukkit.getScheduler().runTaskAsynchronously(main, () -> {
+            int playerElo = Data.getElo(p.getUniqueId());
+            int[] gameElo = whatElo(playerElo);
+            int finalElo = playerElo;
+            if(gameElo.length == 1){
+                HashMap<Player, Integer> map = new HashMap<>();
+                map.put(p, finalElo);
+                main.getQueue().add(map);
+            }else{
+                HashMap<Player, Integer> map = main.getQueue().get(gameElo[1]);
+                map.put(p, playerElo);
+                finalElo = gameElo[0];
+                if(map.size() == main.getConf().getMinPlayer())starting(new ArrayList<>(map.keySet()), finalElo);
+            }
+            p.sendMessage("§dYour are queued to Ranked CS:MO with "+finalElo+" elo");
+            main.getActionBarTick().broke = false;
+            p.getInventory().setItem(8, barrier);
+        });
     }
-    private int[] whatElo(Player p){
-        int elo = main.getPlayerData().getElo(p.getUniqueId());
+    private int[] whatElo(int elo){
         for(HashMap<Player, Integer> map : main.getQueue()){
             int moyenne = (int) map.values().stream().mapToInt(d -> d).average().orElse(0);
             if((moyenne-main.getConf().getMatchMaking())<=elo&&

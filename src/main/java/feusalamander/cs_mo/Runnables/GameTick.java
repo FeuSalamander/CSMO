@@ -1,6 +1,7 @@
 package feusalamander.cs_mo.Runnables;
 
 import feusalamander.cs_mo.Gui.GuiTool;
+import feusalamander.cs_mo.Managers.Data;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Managers.MiniMapRenderer;
 import it.unimi.dsi.fastutil.Pair;
@@ -106,9 +107,9 @@ public class GameTick extends BukkitRunnable {
             game.getBar2().removePlayer(p);
             main.getNone().add(p);
         }
-        for(UUID p : game.getDisconnected().keySet())main.getPlayerData().addElo(p, -10);
+        for(UUID p : game.getDisconnected().keySet())Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p, -10));
         game.getDisconnected().clear();
-        main.getPlayerData().save();
+        Data.saveData();
         new WinScreen(game, won).runTaskTimer(main, 0, 100);
         cancel();
     }
@@ -116,10 +117,10 @@ public class GameTick extends BukkitRunnable {
         if(won.equalsIgnoreCase("CT")){
             if(game.getCT().contains(p)){
                 main.getPlayerData().addWins(p.getUniqueId(), 1);
-                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, true));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, true)));
             }else {
                 main.getPlayerData().addLooses(p.getUniqueId(), 1);
-                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, false));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, false)));
             }
             p.sendMessage("§5The §9CTs §5won the game");
             return;
@@ -127,10 +128,10 @@ public class GameTick extends BukkitRunnable {
         if(won.equalsIgnoreCase("T")){
             if(game.getT().contains(p)){
                 main.getPlayerData().addWins(p.getUniqueId(), 1);
-                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, true));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, true)));
             }else {
                 main.getPlayerData().addLooses(p.getUniqueId(), 1);
-                main.getPlayerData().addElo(p.getUniqueId(), newElo(p, false));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, false)));
             }
             p.sendMessage("§5The §9Ts §5won the game");
             return;
@@ -139,7 +140,7 @@ public class GameTick extends BukkitRunnable {
     }
     private int newElo(Player p, boolean won){
         int actualOutcome = won ? 1 : 0;
-        int pElo = main.getPlayerData().getElo(p.getUniqueId());
+        int pElo = Data.getElo(p.getUniqueId());
         int gameElo = game.getGameElo();
         int[] rankArray = game.getMoneyAndStats().get(p.getName()).right();
         float rank = (float) ((rankArray[0]+1)/(rankArray[1]+1))*5;

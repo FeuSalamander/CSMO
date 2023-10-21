@@ -7,13 +7,11 @@ import feusalamander.cs_mo.Gui.TBuyMenu;
 import feusalamander.cs_mo.Gui.PlayGui;
 import feusalamander.cs_mo.Listerners.GuiClicks;
 import feusalamander.cs_mo.Listerners.onJoin;
-import feusalamander.cs_mo.Managers.Game;
-import feusalamander.cs_mo.Managers.MySQL;
+import feusalamander.cs_mo.Managers.*;
+import feusalamander.cs_mo.Managers.Map;
 import feusalamander.cs_mo.Runnables.ActionBarTick;
 import feusalamander.cs_mo.Configs.Config;
-import feusalamander.cs_mo.Managers.Map;
 import feusalamander.cs_mo.Configs.MapConfig;
-import feusalamander.cs_mo.Managers.PlayerData;
 import feusalamander.cs_mo.Runnables.Starting;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
@@ -26,6 +24,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.*;
 @SuppressWarnings("deprecation")
 public final class CS_MO extends JavaPlugin {
@@ -60,7 +60,7 @@ public final class CS_MO extends JavaPlugin {
     }
     @Override
     public void onDisable() {
-        if(!config.isMysql()) playerData.save();
+        Data.saveData();
         getLogger().info("CS:MO by FeuSalamander is unloaded");
         for(Game game : games){
             game.getBar().removeAll();

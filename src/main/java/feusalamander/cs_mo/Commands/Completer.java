@@ -13,7 +13,7 @@ public class Completer implements TabCompleter {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if(args.length == 1){
-            if(sender.isOp())return List.of("play", "reload", "addelo");
+            if(sender.isOp())return List.of("play", "reload", "addelo", "import", "export");
             return List.of("play");
         }
         if(args.length == 2){
