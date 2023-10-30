@@ -5,9 +5,7 @@ import feusalamander.cs_mo.Managers.Data;
 import feusalamander.cs_mo.Managers.Game;
 import feusalamander.cs_mo.Managers.MiniMapRenderer;
 import it.unimi.dsi.fastutil.Pair;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Particle;
+import org.bukkit.*;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
@@ -59,6 +57,19 @@ public class GameTick extends BukkitRunnable {
         return rest;
     }
     private void score(){
+        boolean empty = true;
+        for(Player p : game.getCT()){
+            if(!game.getSpecs().containsKey(p.getName())){
+                empty = false;
+                break;
+            }
+        }
+        if(empty){
+            game.addScore(1);
+            game.removeBomb();
+            for(Player p : game.getPlayers())p.sendTitle("§6The Ts wins", "");
+            return;
+        }
         if(!game.getBombPlanted().first()){
             game.addScore(0);
             for(Player p : game.getPlayers())p.sendTitle("§9The CTs wins", "");
@@ -89,7 +100,7 @@ public class GameTick extends BukkitRunnable {
         time = 1;
         color = "§f";
     }
-    private void end(){
+    public void end(){
         String won;
         if(game.getScore()[0]<game.getScore()[1]){
             won = "T";
@@ -99,6 +110,8 @@ public class GameTick extends BukkitRunnable {
         if(game.getScore()[0]==game.getScore()[1]){
             won = "none";
         }
+        if(game.getCT().isEmpty())won = "T";
+        if(game.getT().isEmpty())won = "CT";
         for(Player p : game.getPlayers()){
             setWins(p, won);
             p.getInventory().clear();
@@ -106,6 +119,8 @@ public class GameTick extends BukkitRunnable {
             game.getBar().removePlayer(p);
             game.getBar2().removePlayer(p);
             main.getNone().add(p);
+            Data.addKills(p.getUniqueId(), game.getMoneyAndStats().get(p.getName()).right()[0]);
+            Data.addDeaths(p.getUniqueId(), game.getMoneyAndStats().get(p.getName()).right()[1]);
         }
         for(UUID p : game.getDisconnected().keySet())Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p, -10));
         game.getDisconnected().clear();
@@ -118,9 +133,11 @@ public class GameTick extends BukkitRunnable {
             if(game.getCT().contains(p)){
                 main.getPlayerData().addWins(p.getUniqueId(), 1);
                 Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, true)));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addWins(p.getUniqueId(), 1));
             }else {
                 main.getPlayerData().addLooses(p.getUniqueId(), 1);
                 Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, false)));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addLooses(p.getUniqueId(), 1));
             }
             p.sendMessage("§5The §9CTs §5won the game");
             return;
@@ -129,9 +146,11 @@ public class GameTick extends BukkitRunnable {
             if(game.getT().contains(p)){
                 main.getPlayerData().addWins(p.getUniqueId(), 1);
                 Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, true)));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addWins(p.getUniqueId(), 1));
             }else {
                 main.getPlayerData().addLooses(p.getUniqueId(), 1);
                 Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addElo(p.getUniqueId(), newElo(p, false)));
+                Bukkit.getScheduler().runTaskAsynchronously(main, () -> Data.addLooses(p.getUniqueId(), 1));
             }
             p.sendMessage("§5The §9Ts §5won the game");
             return;
@@ -165,12 +184,11 @@ public class GameTick extends BukkitRunnable {
     }
     private void setRest(){
         Bukkit.getScheduler().runTaskLater(main, () -> {
-            for(Item item : game.getItems()){
-                item.remove();
-                game.bombDropped = null;
-                game.getRenderers().get(1).changeBombT(null);
-                game.getRenderers().get(0).changeBombAT(null);
-            }
+            for(Item item : game.getItems())item.remove();
+            if(game.bombDropped.right() != null) game.bombDropped.right().getInventory().setItem(7, GuiTool.pane);
+            game.bombDropped = null;
+            game.getRenderers().get(1).changeBombT(null);
+            game.getRenderers().get(0).changeBombAT(null);
             time = 15;//15
             if(game.getRound() == 12)game.changeSide();
             game.addRound();
@@ -181,6 +199,8 @@ public class GameTick extends BukkitRunnable {
             game.giveShop(true);
             for(Player p :game.getPlayers())p.setHealth(20);
             bomb();
+            Objects.requireNonNull(game.getSb().getTeam("ctV")).setSuffix(String.valueOf(game.getCT().size()));
+            Objects.requireNonNull(game.getSb().getTeam("tV")).setSuffix(String.valueOf(game.getT().size()));
         }, 140);//140
     }
     private void rejoin(){
@@ -203,7 +223,17 @@ public class GameTick extends BukkitRunnable {
         Location loc = game.getBombPlanted().right();
         Objects.requireNonNull(Bukkit.getWorld("world")).spawnParticle(Particle.EXPLOSION_HUGE, loc, 5);
         for(Player p : loc.getNearbyPlayers(60, 20, 60)){
-            p.damage((80/p.getLocation().distance(loc))*8);
+            double dmg = (80/p.getLocation().distance(loc))*8;
+            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT, 1, 1);
+            if(dmg>=p.getHealth()){
+                game.kill(p);
+            }else{
+                p.damage((80/p.getLocation().distance(loc))*8);
+            }
+
         }
+    }
+    public void setTime(int i){
+        time = i;
     }
 }

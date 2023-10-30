@@ -71,6 +71,7 @@ public final class CS_MO extends JavaPlugin {
         }
         for(Player p : getServer().getOnlinePlayers()){
             p.getInventory().clear();
+            p.setHealth(20);
             p.setScoreboard(getScoreboard());
         }
         if(config.isMysql()) mySQL.close();
@@ -117,6 +118,7 @@ public final class CS_MO extends JavaPlugin {
         p.setAllowFlight(true);
         p.setFlying(true);
         p.getInventory().clear();
+        p.setHealth(20);
         for(Player all : Bukkit.getOnlinePlayers())all.hidePlayer(p);
         assert p2 != null;
         p.hidePlayer(p2);

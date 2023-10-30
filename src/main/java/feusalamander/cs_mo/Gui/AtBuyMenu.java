@@ -5,7 +5,9 @@ import feusalamander.cs_mo.Enum.Weapons;
 import feusalamander.cs_mo.Managers.Game;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 
 import java.util.List;
@@ -25,17 +27,33 @@ public final class AtBuyMenu {
         }
     }
     public static void buy(Player p, String name){
-        if(name.equalsIgnoreCase("kit")&&buy2(p, name))p.getInventory().setItem(7, GuiTool.kit);
-        //p.getInventory().setItem(1, WeaponMechanics.getWeaponHandler().getInfoHandler().generateWeapon(Weapons.valueOf(name).id, 1));
+        if(name.equalsIgnoreCase("kit")&& canBuy(p, name)){
+            p.getInventory().setItem(7, GuiTool.kit);
+            return;
+        }
+        if(name.equalsIgnoreCase("helmet")&& canBuy(p, name)){
+            p.getInventory().setItem(EquipmentSlot.HEAD, GuiTool.getItem(Material.IRON_HELMET, "§aHelmet"));
+            return;
+        }
+        if(name.equalsIgnoreCase("armor")&& canBuy(p, name)){
+            p.getInventory().setItem(EquipmentSlot.HEAD, GuiTool.getItem(Material.IRON_HELMET, "§aHelmet"));
+            p.getInventory().setItem(EquipmentSlot.CHEST, GuiTool.getItem(Material.IRON_CHESTPLATE, "§aKevlar Vest"));
+            return;
+        }
+        if(canBuy(p, name)){
+            //p.getInventory().setItem(1, WeaponMechanics.getWeaponHandler().getInfoHandler().generateWeapon(Weapons.valueOf(name).id, 1));
+        }
+        //https://wiki.vg/Protocol#Update_Teams
     }
-    public static boolean buy2(Player p, String name){
-        Weapons weapon = Objects.requireNonNull(buy3(name));
+    public static boolean canBuy(Player p, String name){
+        Weapons weapon = Objects.requireNonNull(getWeapon(name));
         int price = weapon.price;
         for(Game game : main.getGames()){
             if(game.getPlayers().contains(p)){
                 int money = game.getMoneyAndStats().get(p.getName()).first();
                 if(money>=price){
-                    game.removeMoney(p, price);
+                    game.removeMoney(p, money-price);
+                    p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 10, 2);
                     p.sendMessage("§aYou bought the "+weapon.name+" for §6"+price+"$");
                     return true;
                 }
@@ -45,7 +63,7 @@ public final class AtBuyMenu {
         }
         return false;
     }
-    public static Weapons buy3(String name){
+    public static Weapons getWeapon(String name){
         for(Weapons gun : Weapons.values()){
             if(gun.id.equalsIgnoreCase(name))return gun;
         }

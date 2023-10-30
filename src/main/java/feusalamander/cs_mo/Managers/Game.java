@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -166,8 +167,8 @@ public class Game implements Listener {
         AT.setPrefix("§9CT ");
         T.setPrefix("§6T ");
 
-        AT.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
-        T.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        AT.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
+        T.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
 
         for(Player p : players){
             p.setScoreboard(sb);
@@ -205,11 +206,9 @@ public class Game implements Listener {
         tick.bomb();
         for(Player p : CT){
             p.getInventory().setItem(EquipmentSlot.OFF_HAND, miniMapCT);
-            p.getInventory().setItem(8, GuiTool.pane);
         }
         for(Player p : T){
             p.getInventory().setItem(EquipmentSlot.OFF_HAND, miniMapT);
-            p.getInventory().setItem(8, GuiTool.pane);
         }
     }
     public void Inventory(Player p){
@@ -318,11 +317,9 @@ public class Game implements Listener {
     public Location[] getPlace() {
         return place;
     }
-
     public void setBombDropped(Pair<Item, Player> bombDropped) {
         this.bombDropped = bombDropped;
     }
-
     public GameTick getTick() {
         return tick;
     }
@@ -358,7 +355,6 @@ public class Game implements Listener {
     public HashMap<UUID, Boolean> getDisconnected() {
         return disconnected;
     }
-
     public void remove(Player p, Location loc, boolean bomb){
         p.setScoreboard(main.getScoreboard());
         bar.removePlayer(p);
@@ -366,13 +362,62 @@ public class Game implements Listener {
         if(CT.contains(p)){
             disconnected.put(p.getUniqueId(), true);
             CT.remove(p);
+            Objects.requireNonNull(sb.getTeam("ctV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("ctV")).getSuffix())-1));
         }else {
             disconnected.put(p.getUniqueId(), false);
             T.remove(p);
             if(bomb)loc.getWorld().dropItem(loc, GuiTool.bomb);
             renderers.get(1).changeType(MapCursor.Type.GREEN_POINTER, p);
+            Objects.requireNonNull(sb.getTeam("tV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("tV")).getSuffix())-1));
+        }
+        if(CT.isEmpty() || T.isEmpty()){
+            tick.end();
         }
         players.remove(p);
+    }
+    private void dropWeapon(Player p){
+        for(int i =1; i<3; i++){
+            if(!Objects.requireNonNull(p.getInventory().getItem(i)).getType().equals(Material.BLACK_STAINED_GLASS_PANE)){
+                p.getLocation().getWorld().dropItem(p.getLocation(), Objects.requireNonNull(p.getInventory().getItem(i)));
+                return;
+            }
+        }
+        if(CT.contains(p)&& Objects.requireNonNull(p.getInventory().getItem(7)).getType().equals(Material.SHEARS))p.getLocation().getWorld().dropItem(p.getLocation(), Objects.requireNonNull(p.getInventory().getItem(7)));
+    }
+    private void lastOne(Player p){
+        if(CT.contains(p)){
+            boolean empty = true;
+            for(Player p2 : CT){
+                if(!specs.containsKey(p2.getName())){
+                    empty = false;
+                    break;
+                }
+            }
+            if(empty){
+                tick.setTime(1);
+            }
+            return;
+        }
+        if(T.contains(p)){
+            boolean empty = true;
+            for(Player p2 : T){
+                if(!specs.containsKey(p2.getName())){
+                    empty = false;
+                    break;
+                }
+            }
+            if(empty){
+                if(!bombPlanted.first()){
+                    tick.setTime(1);
+                    return;
+                }
+                Location loc = bombPlanted.right().clone();
+                loc.setY(loc.getY()+1);
+                for(Player p2 : T){
+                    p2.teleport(loc);
+                }
+            }
+        }
     }
     public void reconnect(Player p){
         main.getNone().remove(p);
@@ -412,11 +457,39 @@ public class Game implements Listener {
             defuse(p);
         }
         if(e.getDamager() instanceof Player p&&e.getEntity() instanceof Player p2){
-            if(!tick.isRest())return;
-            if(players.contains(p)||players.contains(p2)){
+            if(!(players.contains(p)&&players.contains(p2)))return;
+            if(tick.isRest()){
                 e.setCancelled(true);
+                return;
             }
+            p.playSound(p, Sound.ENTITY_ARROW_HIT_PLAYER, 1, 1);
+            p2.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT, 1, 1);
+            int dmg = (int) e.getDamage();
+            if(CT.contains(p)&&CT.contains(p2)){
+                dmg = dmg/4;
+                e.setDamage(dmg);
+            }else if(T.contains(p)&&T.contains(p2)){
+                dmg = dmg/4;
+                e.setDamage(dmg);
+            }
+            if(dmg<p2.getHealth())return;
+            e.setDamage(0);
+            moneyAndStats.replace(p.getName(), Pair.of(moneyAndStats.get(p.getName()).left(), new int[]{moneyAndStats.get(p.getName()).right()[0]+1, moneyAndStats.get(p.getName()).right()[1]}));
+            kill(p2);
         }
+    }
+    public void kill(Player p){
+        moneyAndStats.replace(p.getName(), Pair.of(moneyAndStats.get(p.getName()).left(), new int[]{moneyAndStats.get(p.getName()).right()[0], moneyAndStats.get(p.getName()).right()[1]+1}));
+        if(T.contains(p))if(Objects.requireNonNull(p.getInventory().getItem(7)).getType().equals(Material.NETHER_STAR))
+            p.getLocation().getWorld().dropItem(p.getLocation(), GuiTool.bomb);
+        dropWeapon(p);
+        if(CT.contains(p)){
+            Objects.requireNonNull(sb.getTeam("ctV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("ctV")).getSuffix())-1));
+        }else{
+            Objects.requireNonNull(sb.getTeam("tV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("tV")).getSuffix())-1));
+        }
+        main.addToSpec(p, this);
+        lastOne(p);
     }
     @EventHandler
     private void onPickUp(PlayerAttemptPickupItemEvent e){
@@ -429,6 +502,7 @@ public class Game implements Listener {
             getRenderers().get(1).changeBombT(null);
             bombDropped = Pair.of(null, e.getPlayer());
             getRenderers().get(0).changeBombAT(null);
+            return;
         }
     }
     @EventHandler
