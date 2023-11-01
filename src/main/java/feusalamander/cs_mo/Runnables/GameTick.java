@@ -29,6 +29,9 @@ public class GameTick extends BukkitRunnable {
     public void run() {
         if(!main.getGames().contains(game)){cancel();return;}
         if(time == 0)changeRound();
+        if(isRest())
+            for(Player p : game.getPlayers())
+                p.sendActionBar("§a"+game.getMoneyAndStats().get(p.getName()).left()+"$");
         game.getBar().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
         game.getBar2().setTitle("§9"+game.getScore()[0]+" "+color+time()+" §6"+game.getScore()[1]);
         updateCursors();

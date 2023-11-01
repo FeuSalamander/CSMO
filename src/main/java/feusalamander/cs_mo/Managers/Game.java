@@ -144,14 +144,13 @@ public class Game implements Listener {
         sb = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective objective = sb.registerNewObjective("§e§lMC:MO", "dummy");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        objective.getScore("Map: §a"+mapName).setScore(9);
-        objective.getScore(" ").setScore(8);
-        objective.getScore("§cBomb: ").setScore(7);
-        objective.getScore("  ").setScore(6);
-        objective.getScore("§9CT: ").setScore(5);
-        objective.getScore("§6T: ").setScore(4);
-        objective.getScore("   ").setScore(3);
-        objective.getScore("    ").setScore(1);
+        objective.getScore("Map: §a"+mapName).setScore(7);
+        objective.getScore(" ").setScore(6);
+        objective.getScore("§cBomb: ").setScore(5);
+        objective.getScore("  ").setScore(4);
+        objective.getScore("§9CT: ").setScore(3);
+        objective.getScore("§6T: ").setScore(2);
+        objective.getScore("   ").setScore(1);
         objective.getScore("§e"+main.getConf().getServerip()).setScore(0);
 
         Team bombV = sb.registerNewTeam("bombV");
@@ -174,7 +173,6 @@ public class Game implements Listener {
             p.setScoreboard(sb);
             if(this.CT.contains(p))AT.addPlayer(p);
             if(this.T.contains(p))T.addPlayer(p);
-            Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+moneyAndStats.get(p.getName()).left()).setScore(2);
         }
         bombV.setSuffix("Not planted");
         atV.setSuffix(String.valueOf(AT.getSize()));
@@ -342,10 +340,8 @@ public class Game implements Listener {
         return bombDropped;
     }
     public void removeMoney(Player p, int money){
-        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p.getName()).left()).resetScore();
         int[] stats = this.moneyAndStats.get(p.getName()).right();
         this.moneyAndStats.replace(p.getName(), Pair.of(money, stats));
-        Objects.requireNonNull(p.getScoreboard().getObjective("§e§lMC:MO")).getScore("§aMoney: §f"+this.moneyAndStats.get(p.getName()).left()).setScore(2);
     }
     public void removeBomb(){
         if(getBombPlanted().left())for(Entity entity : getBombPlanted().right().getNearbyEntities(0.5, 0.5, 0.5))if(entity instanceof ArmorStand)entity.remove();
