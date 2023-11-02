@@ -59,6 +59,7 @@ public class Game implements Listener {
     private final List<MiniMapRenderer> renderers = new ArrayList<>(2);
     private final HashMap<UUID, Boolean> disconnected= new HashMap<>(10);
     private final HashMap<String, Player> specs = new HashMap<>();
+    private int[] compensation = new int[]{0, 0};
     public Game(List<Player> players, int elo){
         this.players = players;
         this.gameElo = elo;
@@ -166,6 +167,9 @@ public class Game implements Listener {
         AT.setPrefix("§9CT ");
         T.setPrefix("§6T ");
 
+        atV.setSuffix(getCT().size()+ "§9      ");
+        tV.setSuffix(getT().size()+ "§6       ");
+
         AT.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
         T.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
 
@@ -175,8 +179,6 @@ public class Game implements Listener {
             if(this.T.contains(p))T.addPlayer(p);
         }
         bombV.setSuffix("Not planted");
-        atV.setSuffix(String.valueOf(AT.getSize()));
-        tV.setSuffix(String.valueOf(T.getSize()));
     }
     private void bossBar(){
         bar = Bukkit.createBossBar("§90 §f1:55 §60", BarColor.BLUE, BarStyle.SEGMENTED_12);
@@ -358,13 +360,15 @@ public class Game implements Listener {
         if(CT.contains(p)){
             disconnected.put(p.getUniqueId(), true);
             CT.remove(p);
-            Objects.requireNonNull(sb.getTeam("ctV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("ctV")).getSuffix())-1));
+            int number = Integer.parseInt(Objects.requireNonNull(sb.getTeam("ctV")).getSuffix().substring(0, 1))-1;
+            Objects.requireNonNull(sb.getTeam("ctV")).setSuffix(number+ Objects.requireNonNull(sb.getTeam("ctV")).getSuffix().substring(1));
         }else {
             disconnected.put(p.getUniqueId(), false);
             T.remove(p);
             if(bomb)loc.getWorld().dropItem(loc, GuiTool.bomb);
             renderers.get(1).changeType(MapCursor.Type.GREEN_POINTER, p);
-            Objects.requireNonNull(sb.getTeam("tV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("tV")).getSuffix())-1));
+            int number = Integer.parseInt(Objects.requireNonNull(sb.getTeam("tV")).getSuffix().substring(0, 1))-1;
+            Objects.requireNonNull(sb.getTeam("tV")).setSuffix(number+ Objects.requireNonNull(sb.getTeam("tV")).getSuffix().substring(1));
         }
         if(CT.isEmpty() || T.isEmpty()){
             tick.end();
@@ -429,6 +433,9 @@ public class Game implements Listener {
         p.setScoreboard(sb);
         main.addToSpec(p, this);
     }
+    public int[] getCompensation() {
+        return compensation;
+    }
     @EventHandler
     private void onMove(PlayerMoveEvent e){
         if(!players.contains(e.getPlayer()))return;
@@ -461,16 +468,26 @@ public class Game implements Listener {
             p.playSound(p, Sound.ENTITY_ARROW_HIT_PLAYER, 1, 1);
             p2.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT, 1, 1);
             int dmg = (int) e.getDamage();
+            boolean same = false;
             if(CT.contains(p)&&CT.contains(p2)){
                 dmg = dmg/4;
                 e.setDamage(dmg);
+                same = true;
             }else if(T.contains(p)&&T.contains(p2)){
                 dmg = dmg/4;
                 e.setDamage(dmg);
+                same = true;
             }
             if(dmg<p2.getHealth())return;
             e.setDamage(0);
-            moneyAndStats.replace(p.getName(), Pair.of(moneyAndStats.get(p.getName()).left(), new int[]{moneyAndStats.get(p.getName()).right()[0]+1, moneyAndStats.get(p.getName()).right()[1]}));
+            if(!same){
+                moneyAndStats.replace(p.getName(), Pair.of(moneyAndStats.get(p.getName()).left()+300, new int[]{moneyAndStats.get(p.getName()).right()[0]+1, moneyAndStats.get(p.getName()).right()[1]}));
+                p.sendMessage("§6+300$ §afor eliminating someone");
+            }else{
+                moneyAndStats.replace(p.getName(), Pair.of(moneyAndStats.get(p.getName()).left()-300, new int[]{moneyAndStats.get(p.getName()).right()[0]-1, moneyAndStats.get(p.getName()).right()[1]}));
+                p.sendMessage("§6-300$ §cfor eliminating someone");
+            }
+
             kill(p2);
         }
     }
@@ -480,9 +497,11 @@ public class Game implements Listener {
             p.getLocation().getWorld().dropItem(p.getLocation(), GuiTool.bomb);
         dropWeapon(p);
         if(CT.contains(p)){
-            Objects.requireNonNull(sb.getTeam("ctV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("ctV")).getSuffix())-1));
+            int number = Integer.parseInt(Objects.requireNonNull(sb.getTeam("ctV")).getSuffix().substring(0, 1))-1;
+            Objects.requireNonNull(sb.getTeam("ctV")).setSuffix(number+ Objects.requireNonNull(sb.getTeam("ctV")).getSuffix().substring(1));
         }else{
-            Objects.requireNonNull(sb.getTeam("tV")).setSuffix(String.valueOf(Integer.parseInt(Objects.requireNonNull(sb.getTeam("tV")).getSuffix())-1));
+            int number = Integer.parseInt(Objects.requireNonNull(sb.getTeam("tV")).getSuffix().substring(0, 1))-1;
+            Objects.requireNonNull(sb.getTeam("tV")).setSuffix(number+ Objects.requireNonNull(sb.getTeam("tV")).getSuffix().substring(1));
         }
         main.addToSpec(p, this);
         lastOne(p);

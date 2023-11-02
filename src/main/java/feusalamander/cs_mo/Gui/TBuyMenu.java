@@ -15,7 +15,7 @@ public final class TBuyMenu {
         for(int i = 0; i<54; i++){menu.setItem(i, GuiTool.pane);}
         for(Weapons gun : Weapons.values()){
             if(gun.type.equals(WeaponTypes.T)||gun.type.equals(WeaponTypes.ALL)){
-                menu.setItem(gun.slot, GuiTool.getItem(Material.FEATHER, "§a"+gun.name+" §6"+gun.price+"$", List.of(gun.name)));
+                menu.setItem(gun.slot, GuiTool.getItem(Material.FEATHER, "§a"+gun.name+" §6"+gun.price+"$", List.of(gun.id)));
             }
         }
     }

@@ -43,6 +43,7 @@ public final class CS_MO extends JavaPlugin {
     private final List<Starting> starting = new ArrayList<>();
     private final List<Game> games = new ArrayList<>();
     public final Random random = new Random();
+    private final int[] looseMoney = new int[]{1400, 1900, 2400, 2900, 3400};
 
     @Override
     public void onEnable() {
@@ -179,5 +180,8 @@ public final class CS_MO extends JavaPlugin {
     }
     public MySQL getMySQL() {
         return mySQL;
+    }
+    public int[] getLooseMoney() {
+        return looseMoney;
     }
 }

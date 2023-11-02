@@ -71,16 +71,88 @@ public class GameTick extends BukkitRunnable {
             game.addScore(1);
             game.removeBomb();
             for(Player p : game.getPlayers())p.sendTitle("§6The Ts wins", "");
+            updateComp(true);
+            for(Player p : game.getT()){
+                game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+3250, game.getMoneyAndStats().get(p.getName()).right()));
+                p.sendMessage("§a6+3250$ §afor eliminating the enemy team");
+            }
             return;
         }
         if(!game.getBombPlanted().first()){
+            boolean empty2 = true;
+            for(Player p : game.getT()){
+                if(!game.getSpecs().containsKey(p.getName())){
+                    empty2 = false;
+                    break;
+                }
+            }
+            if(empty2){
+                game.addScore(1);
+                game.removeBomb();
+                for(Player p : game.getPlayers())p.sendTitle("§9The CTs wins", "");
+                updateComp(false);
+                for(Player p : game.getCT()){
+                    game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+3250, game.getMoneyAndStats().get(p.getName()).right()));
+                    p.sendMessage("§6+3250$ §afor eliminating the enemy team");
+                }
+                return;
+            }
             game.addScore(0);
             for(Player p : game.getPlayers())p.sendTitle("§9The CTs wins", "");
+            updateComp(false);
+            if(game.getBombDropped().left() != null||game.getBombDropped().right() != null){
+                for(Player p : game.getCT()){
+                    game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+3250, game.getMoneyAndStats().get(p.getName()).right()));
+                    p.sendMessage("§6+3250$ §afor not letting the Ts plant");
+                }
+            }else{
+                for(Player p : game.getCT()){
+                    game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+3500, game.getMoneyAndStats().get(p.getName()).right()));
+                    p.sendMessage("§6+3500$ §afor defusing the bomb");
+                }
+                for(Player p : game.getT()){
+                    game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+800, game.getMoneyAndStats().get(p.getName()).right()));
+                    p.sendMessage("§6+800$ §afor planting the bomb");
+                }
+            }
         }else {
             game.addScore(1);
             game.removeBomb();
             for(Player p : game.getPlayers())p.sendTitle("§6The Ts wins", "");
+            updateComp(true);
+            for(Player p : game.getT()){
+                game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+3500, game.getMoneyAndStats().get(p.getName()).right()));
+                p.sendMessage("§6+3500$ §afor completing the objective");
+            }
         }
+
+    }
+    private void updateComp(boolean ct){
+        if(ct){
+            int money = main.getLooseMoney()[game.getCompensation()[0]];
+            for(Player p : game.getCT()){
+                game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+money, game.getMoneyAndStats().get(p.getName()).right()));
+                p.sendMessage("§6+"+money+"$ §afor loosing");
+            }
+            if(game.getCompensation()[0] < 4) game.getCompensation()[0]++;
+            if(game.getCompensation()[1] > 0) game.getCompensation()[1]--;
+        }else{
+            int money = main.getLooseMoney()[game.getCompensation()[1]];
+            for(Player p : game.getT()){
+                game.getMoneyAndStats().replace(p.getName(), Pair.of(game.getMoneyAndStats().get(p.getName()).left()+money, game.getMoneyAndStats().get(p.getName()).right()));
+                p.sendMessage("§6+"+money+"$ §afor loosing");
+            }
+            if(game.getCompensation()[1] < 4) game.getCompensation()[1]++;
+            if(game.getCompensation()[0] > 0) game.getCompensation()[0]--;
+        }
+        String base = Objects.requireNonNull(game.getSb().getTeam("ctV")).
+                getSuffix().substring(0, Objects.requireNonNull(game.getSb().getTeam("ctV")).getSuffix().length()-game.getCompensation()[0]);
+        String base2 = Objects.requireNonNull(game.getSb().getTeam("tV")).
+                getSuffix().substring(0, Objects.requireNonNull(game.getSb().getTeam("tV")).getSuffix().length()-game.getCompensation()[1]);
+        String comp = "■".repeat(Math.max(0, game.getCompensation()[0]));
+        Objects.requireNonNull(game.getSb().getTeam("ctV")).setSuffix(base+ comp);
+        String comp2 = "■".repeat(Math.max(0, game.getCompensation()[1]));
+        Objects.requireNonNull(game.getSb().getTeam("tV")).setSuffix(base2+ comp2);
     }
     public void bomb(){
         Player p = null;
@@ -202,8 +274,8 @@ public class GameTick extends BukkitRunnable {
             game.giveShop(true);
             for(Player p :game.getPlayers())p.setHealth(20);
             bomb();
-            Objects.requireNonNull(game.getSb().getTeam("ctV")).setSuffix(String.valueOf(game.getCT().size()));
-            Objects.requireNonNull(game.getSb().getTeam("tV")).setSuffix(String.valueOf(game.getT().size()));
+            Objects.requireNonNull(game.getSb().getTeam("ctV")).setSuffix(game.getCT().size()+ Objects.requireNonNull(game.getSb().getTeam("ctV")).getSuffix().substring(1));
+            Objects.requireNonNull(game.getSb().getTeam("tV")).setSuffix(game.getT().size()+ Objects.requireNonNull(game.getSb().getTeam("tV")).getSuffix().substring(1));
         }, 140);//140
     }
     private void rejoin(){

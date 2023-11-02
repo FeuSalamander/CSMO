@@ -22,28 +22,29 @@ public final class AtBuyMenu {
         for(int i = 0; i<54; i++){menu.setItem(i, GuiTool.pane);}
         for(Weapons gun : Weapons.values()){
             if(gun.type.equals(WeaponTypes.AT)||gun.type.equals(WeaponTypes.ALL)){
-                menu.setItem(gun.slot, GuiTool.getItem(Material.FEATHER, "§a"+gun.name+" §6"+gun.price+"$", List.of(gun.name())));
+                menu.setItem(gun.slot, GuiTool.getItem(Material.FEATHER, "§a"+gun.name+" §6"+gun.price+"$", List.of(gun.id)));
             }
         }
     }
     public static void buy(Player p, String name){
-        if(name.equalsIgnoreCase("kit")&& canBuy(p, name)){
-            p.getInventory().setItem(7, GuiTool.kit);
+        if(name.equalsIgnoreCase("vest")){
+            if(canBuy(p, name))
+                p.getInventory().setItem(EquipmentSlot.CHEST, GuiTool.getItem(Material.IRON_CHESTPLATE, "§aKevlar Vest"));
             return;
         }
-        if(name.equalsIgnoreCase("helmet")&& canBuy(p, name)){
-            p.getInventory().setItem(EquipmentSlot.HEAD, GuiTool.getItem(Material.IRON_HELMET, "§aHelmet"));
+        if(name.equalsIgnoreCase("helmet")){
+            if(!p.getInventory().getItem(EquipmentSlot.CHEST).getType().equals(Material.IRON_CHESTPLATE)){p.sendMessage("You need to buy the §aKevlar Vest first !");return;}
+            if(canBuy(p, name)) p.getInventory().setItem(EquipmentSlot.HEAD, GuiTool.getItem(Material.IRON_HELMET, "§aHelmet"));
             return;
         }
-        if(name.equalsIgnoreCase("armor")&& canBuy(p, name)){
-            p.getInventory().setItem(EquipmentSlot.HEAD, GuiTool.getItem(Material.IRON_HELMET, "§aHelmet"));
-            p.getInventory().setItem(EquipmentSlot.CHEST, GuiTool.getItem(Material.IRON_CHESTPLATE, "§aKevlar Vest"));
+        if(name.equalsIgnoreCase("kit")){
+            if(canBuy(p, name))
+                p.getInventory().setItem(7, GuiTool.kit);
             return;
         }
         if(canBuy(p, name)){
             //p.getInventory().setItem(1, WeaponMechanics.getWeaponHandler().getInfoHandler().generateWeapon(Weapons.valueOf(name).id, 1));
         }
-        //https://wiki.vg/Protocol#Update_Teams
     }
     public static boolean canBuy(Player p, String name){
         Weapons weapon = Objects.requireNonNull(getWeapon(name));
